@@ -301,6 +301,27 @@
       background: var(--soft-red);
     }
 
+    .feedback .repeat-digit-answer {
+      position: relative;
+      display: inline-block;
+      min-width: 0.72em;
+      padding-top: 0.28em;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .feedback .repeat-digit-answer::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 0.22em;
+      height: 0.22em;
+      border-radius: 50%;
+      background: currentColor;
+      transform: translateX(-50%);
+    }
+
     button:disabled {
       cursor: not-allowed;
       opacity: 0.48;
@@ -808,9 +829,20 @@
       els.bar.innerHTML = Array.from({ length: card.den }, (_, i) => `<span class="${i < card.num ? "on" : ""}"></span>`).join("");
     }
 
+    function feedbackTextWithDots(text) {
+      const escaped = text.replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+      return escaped.replace(/([0-9])\u0307/g, '<span class="repeat-digit-answer">$1</span>');
+    }
+
     function setFeedback(kind, text) {
       els.feedback.className = `feedback ${kind || ""}`.trim();
-      els.feedback.textContent = text;
+      els.feedback.innerHTML = feedbackTextWithDots(text);
     }
 
     function showCorrectReaction() {
