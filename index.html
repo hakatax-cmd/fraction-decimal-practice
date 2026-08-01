@@ -372,7 +372,6 @@
       display: grid;
       place-items: center;
       background: rgba(255, 255, 255, 0.72);
-      box-shadow: 0 18px 48px rgba(194, 65, 52, 0.24);
       transform: scale(0.55) rotate(-8deg);
     }
 
@@ -966,7 +965,7 @@
         state.advanceTimer = setTimeout(() => {
           state.advanceTimer = null;
           nextCard();
-        }, 1500);
+        }, 1100);
       } else {
         hideCorrectReaction();
         setFeedback("bad", `惜しい。${result.reason}`);
