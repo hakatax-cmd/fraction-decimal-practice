@@ -39,28 +39,17 @@
     main {
       width: min(1120px, calc(100% - 24px));
       margin: 0 auto;
-      padding: 18px 0 34px;
+      padding: 10px 0 28px;
     }
 
     header {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 14px;
-      align-items: end;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(1.35rem, 1.05rem + 1vw, 2rem);
+      font-size: clamp(1.25rem, 1rem + 0.8vw, 1.75rem);
       font-weight: 700;
-    }
-
-    .lead {
-      margin: 4px 0 0;
-      color: var(--muted);
-      line-height: 1.55;
-      font-size: 0.95rem;
     }
 
     button,
@@ -108,45 +97,6 @@
       background: var(--ink);
       border-color: var(--ink);
       color: white;
-    }
-
-    .topbar {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .mode-tabs {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .compact-stats {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-
-    .compact-stats strong {
-      color: var(--ink);
-      font-weight: 700;
-    }
-
-    .stat-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      min-height: 32px;
-      padding: 5px 9px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.74);
     }
 
     .app {
@@ -290,14 +240,15 @@
 
     .key {
       min-width: 0;
-      padding: 7px 4px;
+      min-height: 46px;
+      padding: 9px 2px;
       font-size: 1rem;
       font-variant-numeric: tabular-nums;
     }
 
     .key.dotdigit {
-      min-height: 40px;
-      padding: 7px 4px;
+      min-height: 46px;
+      padding: 9px 2px;
     }
 
     .key.placeholder {
@@ -306,10 +257,23 @@
     }
 
     .repeat-digit {
-      text-decoration-line: overline;
-      text-decoration-thickness: 2px;
-      text-decoration-color: var(--primary);
-      text-underline-offset: 2px;
+      position: relative;
+      display: inline-block;
+      min-width: 0.8em;
+      padding-top: 0.28em;
+      line-height: 1;
+    }
+
+    .repeat-digit::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 0.22em;
+      height: 0.22em;
+      border-radius: 50%;
+      background: var(--primary);
+      transform: translateX(-50%);
     }
 
     .key-tools {
@@ -483,8 +447,6 @@
     }
 
     @media (max-width: 900px) {
-      header,
-      .topbar,
       .app,
       .visual-zone {
         grid-template-columns: 1fr;
@@ -501,37 +463,14 @@
         padding: 12px;
       }
 
-      .digit-pairs {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-      }
-
     }
   </style>
 </head>
 <body>
   <main>
     <header>
-      <div>
-        <h1>分数から小数 練習</h1>
-        <p class="lead">絵を見て、小数で答える。循環小数は上点つきでも入力できます。</p>
-      </div>
-      <button id="resetAll" class="ghost" type="button">記録リセット</button>
+      <h1>分数から小数</h1>
     </header>
-
-    <section class="topbar" aria-label="練習モードと成績">
-      <div class="mode-tabs">
-        <button id="modePractice" type="button" aria-pressed="true">練習</button>
-        <button id="modeMistakes" type="button" aria-pressed="false">苦手だけ</button>
-        <button id="modeAll" type="button" aria-pressed="false">一覧</button>
-        <button id="newRound" class="primary" type="button">新しい10問</button>
-      </div>
-      <div class="compact-stats">
-        <span class="stat-chip">正解 <strong id="correctCount">0</strong></span>
-        <span class="stat-chip">挑戦 <strong id="tryCount">0</strong></span>
-        <span class="stat-chip">連続 <strong id="streakCount">0</strong></span>
-        <span class="stat-chip">残り <strong id="remainingCount">0</strong></span>
-      </div>
-    </section>
 
     <section class="app">
       <div class="panel practice">
@@ -565,7 +504,6 @@
 
               <div id="feedback" class="feedback" aria-live="polite">絵の色がついた部分を、小数で表してみよう。</div>
               <div class="actions">
-                <button id="showAnswer" type="button">答えを見る</button>
                 <button id="nextCard" type="button">次へ</button>
               </div>
             </div>
@@ -610,17 +548,7 @@
       input: document.getElementById("answerInput"),
       digitKeys: document.getElementById("digitKeys"),
       feedback: document.getElementById("feedback"),
-      showAnswer: document.getElementById("showAnswer"),
       nextCard: document.getElementById("nextCard"),
-      correct: document.getElementById("correctCount"),
-      tries: document.getElementById("tryCount"),
-      streak: document.getElementById("streakCount"),
-      remaining: document.getElementById("remainingCount"),
-      modePractice: document.getElementById("modePractice"),
-      modeMistakes: document.getElementById("modeMistakes"),
-      modeAll: document.getElementById("modeAll"),
-      newRound: document.getElementById("newRound"),
-      resetAll: document.getElementById("resetAll"),
       practiceView: document.getElementById("practiceView"),
       allView: document.getElementById("allView"),
       allTable: document.getElementById("allTable"),
@@ -880,10 +808,6 @@
     }
 
     function renderStats() {
-      els.correct.textContent = state.correct;
-      els.tries.textContent = state.tries;
-      els.streak.textContent = state.streak;
-      els.remaining.textContent = state.queue.length;
     }
 
     function renderAllTable() {
@@ -999,44 +923,8 @@
       }).join("");
     }
 
-    function setMode(mode) {
-      state.mode = mode;
-      els.modePractice.setAttribute("aria-pressed", String(mode === "practice"));
-      els.modeMistakes.setAttribute("aria-pressed", String(mode === "mistakes"));
-      els.modeAll.setAttribute("aria-pressed", String(mode === "all"));
-      els.practiceView.hidden = mode === "all";
-      els.allView.hidden = mode !== "all";
-      if (mode === "all") {
-        renderAllTable();
-      } else {
-        buildRound(mode === "mistakes");
-      }
-    }
-
     els.form.addEventListener("submit", submitAnswer);
-    els.showAnswer.addEventListener("click", () => {
-      if (!state.current) return;
-      state.answered = true;
-      els.nextCard.disabled = false;
-      hideCorrectReaction();
-      setFeedback("bad", `${fractionLabel(state.current)} = ${decimalLabel(state.current.num, state.current.den)}。次でもう一回出るよ。`);
-      record(state.current, false);
-    });
     els.nextCard.addEventListener("click", nextCard);
-    els.newRound.addEventListener("click", () => buildRound(state.mode === "mistakes"));
-    els.modePractice.addEventListener("click", () => setMode("practice"));
-    els.modeMistakes.addEventListener("click", () => setMode("mistakes"));
-    els.modeAll.addEventListener("click", () => setMode("all"));
-    els.resetAll.addEventListener("click", () => {
-      if (!confirm("記録をリセットしますか？")) return;
-      state.stats = {};
-      state.correct = 0;
-      state.tries = 0;
-      state.streak = 0;
-      save();
-      renderAllTable();
-      buildRound(state.mode === "mistakes");
-    });
     document.addEventListener("click", event => {
       const key = event.target.closest("[data-key]");
       const action = event.target.closest("[data-action]");
