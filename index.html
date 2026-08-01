@@ -588,6 +588,7 @@
       queue: [],
       current: null,
       answered: false,
+      advanceTimer: null,
       touchStartX: 0,
       touchStartY: 0
     };
@@ -872,6 +873,10 @@
     }
 
     function nextCard() {
+      if (state.advanceTimer) {
+        clearTimeout(state.advanceTimer);
+        state.advanceTimer = null;
+      }
       if (state.current && !state.answered) {
         setFeedback("bad", "先に答えを入れて「答える」を押してね。");
         return;
@@ -927,6 +932,10 @@
       if (result.ok) {
         setFeedback("good", `正解。${fractionLabel(state.current)} = ${decimalLabel(state.current.num, state.current.den)}`);
         showCorrectReaction();
+        state.advanceTimer = setTimeout(() => {
+          state.advanceTimer = null;
+          nextCard();
+        }, 1500);
       } else {
         hideCorrectReaction();
         setFeedback("bad", `惜しい。${result.reason}`);
