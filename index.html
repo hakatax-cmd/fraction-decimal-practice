@@ -725,6 +725,16 @@
       nextCard();
     }
 
+    function takeNextCard() {
+      if (!state.current || !state.queue.length) return state.queue.shift();
+      const sameDen = state.current.den;
+      if (state.queue[0].den !== sameDen) return state.queue.shift();
+      const swapIndex = state.queue.findIndex(card => card.den !== sameDen);
+      if (swapIndex < 0) return state.queue.shift();
+      const [card] = state.queue.splice(swapIndex, 1);
+      return card;
+    }
+
     function polar(cx, cy, r, angle) {
       const rad = (angle - 90) * Math.PI / 180;
       return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
@@ -833,7 +843,7 @@
         buildRound(state.mode === "mistakes");
         return;
       }
-      state.current = state.queue.shift();
+      state.current = takeNextCard();
       state.answered = false;
       renderVisual(state.current);
       els.prompt.textContent = `${fractionLabel(state.current)} を小数にすると？`;
@@ -858,7 +868,11 @@
         state.streak += 1;
       } else {
         state.streak = 0;
-        state.queue.splice(Math.min(3, state.queue.length), 0, card);
+        let insertAt = Math.min(3, state.queue.length);
+        while (insertAt < state.queue.length && state.queue[insertAt - 1]?.den === card.den) {
+          insertAt += 1;
+        }
+        state.queue.splice(insertAt, 0, card);
       }
       save();
       renderStats();
