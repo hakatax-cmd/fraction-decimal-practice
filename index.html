@@ -534,6 +534,7 @@
     const allCards = [];
     for (let den = 3; den <= 9; den += 1) {
       for (let num = 1; num < den; num += 1) {
+        if (den === 7 && num !== 1) continue;
         allCards.push({ num, den, id: `${num}/${den}` });
       }
     }
@@ -667,6 +668,12 @@
       const numeric = Number(plain.replace(/\.\.\.$/, ""));
       const exact = card.num / card.den;
       if (isTerminating(card.num, card.den)) {
+        if (hasDottedDigit(normalized)) {
+          return {
+            ok: false,
+            reason: `これは循環小数ではないよ。${decimalLabel(card.num, card.den)}`
+          };
+        }
         return {
           ok: Math.abs(numeric - exact) < 0.0000001,
           reason: `ぴったりは ${decimalLabel(card.num, card.den)}`
@@ -681,10 +688,9 @@
         };
       }
 
-      const decimals = (plain.split(".")[1] || "").replace(/\D/g, "").length;
       return {
-        ok: decimals >= 3 && Math.abs(numeric - exact) < 0.001,
-        reason: `上点なしなら ${plainDecimalLabel(card.num, card.den)} くらいまで書ければOK`
+        ok: false,
+        reason: `循環小数なので上点つきで入れてね。${decimalLabel(card.num, card.den)}`
       };
     }
 
@@ -849,7 +855,7 @@
       els.prompt.textContent = `${fractionLabel(state.current)} を小数にすると？`;
       els.hint.textContent = isTerminating(state.current.num, state.current.den)
         ? "0. の後ろを、最後までぴったり入れてね。"
-        : "0. の後ろを入れてね。上点つきでも、小数第3位くらいまででもOK。";
+        : "循環するところは、上点つきの数字で入れてね。";
       els.input.value = "";
       els.nextCard.disabled = true;
       setFeedback("", "0. の後ろに続く数字を入れてみよう。");
