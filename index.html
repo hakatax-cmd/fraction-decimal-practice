@@ -607,6 +607,7 @@
       challengeTarget: 12,
       sessionCorrect: 0,
       startedAt: null,
+      finishedElapsedMs: null,
       finished: false,
       timerInterval: null,
       advanceTimer: null,
@@ -894,15 +895,18 @@
     function renderStats() {
     }
 
-    function formatElapsed(totalSeconds) {
-      const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
-      const seconds = String(totalSeconds % 60).padStart(2, "0");
-      return `${minutes}:${seconds}`;
+    function formatElapsedMs(elapsedMs) {
+      const totalTenths = Math.floor(Math.max(0, elapsedMs) / 100);
+      const minutes = String(Math.floor(totalTenths / 600)).padStart(2, "0");
+      const seconds = String(Math.floor(totalTenths / 10) % 60).padStart(2, "0");
+      const tenths = totalTenths % 10;
+      return `${minutes}:${seconds}.${tenths}`;
     }
 
-    function elapsedSeconds() {
+    function elapsedMs() {
+      if (state.finishedElapsedMs !== null) return state.finishedElapsedMs;
       if (!state.startedAt) return 0;
-      return Math.floor((Date.now() - state.startedAt) / 1000);
+      return Date.now() - state.startedAt;
     }
 
     function formatClearedAt(date) {
@@ -917,14 +921,14 @@
 
     function renderChallenge() {
       els.sessionProgress.textContent = `${state.sessionCorrect}/${state.challengeTarget}`;
-      els.elapsedTime.textContent = formatElapsed(elapsedSeconds());
+      els.elapsedTime.textContent = formatElapsedMs(elapsedMs());
     }
 
     function startChallengeTimer() {
       if (state.startedAt) return;
       state.startedAt = Date.now();
       renderChallenge();
-      state.timerInterval = setInterval(renderChallenge, 250);
+      state.timerInterval = setInterval(renderChallenge, 100);
     }
 
     function stopChallengeTimer() {
@@ -944,6 +948,8 @@
 
     function finishChallenge() {
       state.finished = true;
+      const clearedAt = new Date();
+      state.finishedElapsedMs = state.startedAt ? clearedAt.getTime() - state.startedAt : 0;
       if (state.advanceTimer) {
         clearTimeout(state.advanceTimer);
         state.advanceTimer = null;
@@ -952,7 +958,7 @@
       setPracticeDisabled(true);
       els.prompt.textContent = "おしまい！";
       els.hint.textContent = "12問正解までの時間を測りました。";
-      setFeedback("good", `終了！12問正解。タイム ${formatElapsed(elapsedSeconds())}。クリア ${formatClearedAt(new Date())}`);
+      setFeedback("good", `終了！12問正解。タイム ${formatElapsedMs(state.finishedElapsedMs)}。クリア ${formatClearedAt(clearedAt)}`);
       setTimeout(hideCorrectReaction, 1000);
     }
 
