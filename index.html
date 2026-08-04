@@ -167,6 +167,17 @@
       font-weight: 700;
     }
 
+    .challenge-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
     .hint {
       margin: 0 0 12px;
       color: var(--muted);
@@ -499,6 +510,10 @@
             </div>
             <div class="question">
               <h2 id="promptText">小数にすると？</h2>
+              <div class="challenge-meta" aria-live="polite">
+                <span id="sessionProgress">0/12</span>
+                <span id="elapsedTime">00:00</span>
+              </div>
               <p id="hintText" class="hint">0. の後ろだけ入力してね。例: 25</p>
               <form id="answerForm">
                 <div class="answer-row">
@@ -567,6 +582,8 @@
       form: document.getElementById("answerForm"),
       input: document.getElementById("answerInput"),
       answerDisplay: document.getElementById("answerDisplay"),
+      sessionProgress: document.getElementById("sessionProgress"),
+      elapsedTime: document.getElementById("elapsedTime"),
       digitKeys: document.getElementById("digitKeys"),
       feedback: document.getElementById("feedback"),
       nextCard: document.getElementById("nextCard"),
@@ -587,6 +604,11 @@
       queue: [],
       current: null,
       answered: false,
+      challengeTarget: 12,
+      sessionCorrect: 0,
+      startedAt: null,
+      finished: false,
+      timerInterval: null,
       advanceTimer: null,
       touchStartX: 0,
       touchStartY: 0
@@ -872,6 +894,58 @@
     function renderStats() {
     }
 
+    function formatElapsed(totalSeconds) {
+      const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+      const seconds = String(totalSeconds % 60).padStart(2, "0");
+      return `${minutes}:${seconds}`;
+    }
+
+    function elapsedSeconds() {
+      if (!state.startedAt) return 0;
+      return Math.floor((Date.now() - state.startedAt) / 1000);
+    }
+
+    function renderChallenge() {
+      els.sessionProgress.textContent = `${state.sessionCorrect}/${state.challengeTarget}`;
+      els.elapsedTime.textContent = formatElapsed(elapsedSeconds());
+    }
+
+    function startChallengeTimer() {
+      if (state.startedAt) return;
+      state.startedAt = Date.now();
+      renderChallenge();
+      state.timerInterval = setInterval(renderChallenge, 250);
+    }
+
+    function stopChallengeTimer() {
+      if (!state.timerInterval) return;
+      clearInterval(state.timerInterval);
+      state.timerInterval = null;
+      renderChallenge();
+    }
+
+    function setPracticeDisabled(disabled) {
+      els.form.querySelector('button[type="submit"]').disabled = disabled;
+      els.nextCard.disabled = disabled;
+      document.querySelectorAll("[data-key], [data-action]").forEach(button => {
+        button.disabled = disabled;
+      });
+    }
+
+    function finishChallenge() {
+      state.finished = true;
+      if (state.advanceTimer) {
+        clearTimeout(state.advanceTimer);
+        state.advanceTimer = null;
+      }
+      stopChallengeTimer();
+      setPracticeDisabled(true);
+      els.prompt.textContent = "おしまい！";
+      els.hint.textContent = "12問正解までの時間を測りました。";
+      setFeedback("good", `終了！12問正解。タイム ${formatElapsed(elapsedSeconds())}`);
+      setTimeout(hideCorrectReaction, 1000);
+    }
+
     function renderAllTable() {
       els.allTable.innerHTML = allCards
         .filter(card => state.enabledDenoms.includes(card.den))
@@ -886,6 +960,7 @@
     }
 
     function nextCard() {
+      if (state.finished) return;
       if (state.advanceTimer) {
         clearTimeout(state.advanceTimer);
         state.advanceTimer = null;
@@ -901,6 +976,7 @@
       }
       state.current = takeNextCard();
       state.answered = false;
+      startChallengeTimer();
       renderVisual(state.current);
       els.prompt.textContent = `${fractionLabel(state.current)} を小数にすると？`;
       els.hint.textContent = isTerminating(state.current.num, state.current.den)
@@ -923,22 +999,18 @@
       if (ok) {
         state.correct += 1;
         state.streak += 1;
+        state.sessionCorrect += 1;
       } else {
         state.streak = 0;
-        let insertAt = Math.min(3, state.queue.length);
-        while (insertAt < state.queue.length && state.queue[insertAt - 1]?.den === card.den) {
-          insertAt += 1;
-        }
-        state.queue.splice(insertAt, 0, card);
       }
       save();
-      renderStats();
+      renderChallenge();
       renderAllTable();
     }
 
     function submitAnswer(event) {
       event.preventDefault();
-      if (!state.current || state.answered) return;
+      if (state.finished || !state.current || state.answered) return;
       const result = checkAnswer(els.input.value, state.current);
       state.answered = true;
       els.nextCard.disabled = false;
@@ -946,6 +1018,10 @@
       if (result.ok) {
         setFeedback("good", `正解。${fractionLabel(state.current)} = ${decimalLabel(state.current.num, state.current.den)}`);
         showCorrectReaction();
+        if (state.sessionCorrect >= state.challengeTarget) {
+          finishChallenge();
+          return;
+        }
         state.advanceTimer = setTimeout(() => {
           state.advanceTimer = null;
           nextCard();
@@ -957,6 +1033,7 @@
     }
 
     function appendInput(text) {
+      if (state.finished) return;
       if (text === ".") return;
       const start = els.input.selectionStart ?? els.input.value.length;
       const end = els.input.selectionEnd ?? els.input.value.length;
@@ -968,6 +1045,7 @@
     }
 
     function backspaceInput() {
+      if (state.finished) return;
       const start = els.input.selectionStart ?? els.input.value.length;
       const end = els.input.selectionEnd ?? els.input.value.length;
       if (start !== end) {
@@ -1004,6 +1082,7 @@
     els.form.addEventListener("submit", submitAnswer);
     els.nextCard.addEventListener("click", nextCard);
     document.addEventListener("click", event => {
+      if (state.finished) return;
       const key = event.target.closest("[data-key]");
       const action = event.target.closest("[data-action]");
       if (key) appendInput(key.dataset.key);
