@@ -723,16 +723,6 @@
       return allCards.filter(card => state.enabledDenoms.includes(card.den));
     }
 
-    function weightedCards() {
-      const weighted = [];
-      filteredCards().forEach(card => {
-        const stat = cardStat(card);
-        const weight = Math.max(1, 1 + stat.wrong * 2 - stat.right);
-        for (let i = 0; i < weight; i += 1) weighted.push(card);
-      });
-      return weighted;
-    }
-
     function shuffle(items) {
       const copy = [...items];
       for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -742,13 +732,33 @@
       return copy;
     }
 
-    function buildRound(mistakesOnly = false) {
-      const size = 10;
-      const source = mistakesOnly
-        ? filteredCards().filter(card => cardStat(card).wrong > cardStat(card).right)
-        : weightedCards();
-      state.queue = shuffle(source.length ? source : filteredCards()).slice(0, size);
-      state.current = null;
+    function spreadCardsEvenly(cards, previousDen = null) {
+      const groups = new Map();
+      shuffle(cards).forEach(card => {
+        if (!groups.has(card.den)) groups.set(card.den, []);
+        groups.get(card.den).push(card);
+      });
+
+      const deck = [];
+      let lastDen = previousDen;
+
+      while (deck.length < cards.length) {
+        const candidates = [...groups.entries()]
+          .filter(([den, group]) => group.length && den !== lastDen)
+          .sort((a, b) => b[1].length - a[1].length);
+        const fallback = [...groups.entries()]
+          .filter(([, group]) => group.length)
+          .sort((a, b) => b[1].length - a[1].length);
+        const [den, group] = (candidates[0] || fallback[0]);
+        deck.push(group.pop());
+        lastDen = den;
+      }
+
+      return deck;
+    }
+
+    function buildRound() {
+      state.queue = spreadCardsEvenly(filteredCards(), state.current?.den ?? null);
       nextCard();
     }
 
@@ -886,7 +896,7 @@
       }
       hideCorrectReaction();
       if (!state.queue.length) {
-        buildRound(state.mode === "mistakes");
+        buildRound();
         return;
       }
       state.current = takeNextCard();
@@ -1024,7 +1034,7 @@
     renderAllTable();
     els.input.value = "";
     renderAnswerInput();
-    buildRound(false);
+    buildRound();
   </script>
 </body>
 </html>
