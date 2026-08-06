@@ -52,6 +52,14 @@
       font-weight: 700;
     }
 
+    .reward-rule {
+      margin: 4px 0 0;
+      color: var(--bad);
+      font-size: clamp(0.95rem, 0.88rem + 0.35vw, 1.15rem);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
     button,
     input,
     select {
@@ -183,6 +191,19 @@
       color: var(--muted);
       line-height: 1.55;
       font-size: 0.95rem;
+    }
+
+    .hint.reward-ticket {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 8px 16px;
+      border: 2px solid var(--bad);
+      border-radius: 8px;
+      background: #fff7ed;
+      color: var(--bad);
+      font-size: 1.45rem;
+      font-weight: 900;
+      line-height: 1.2;
     }
 
     .answer-row {
@@ -320,6 +341,7 @@
       background: #f2f4f7;
       color: var(--muted);
       line-height: 1.5;
+      white-space: pre-line;
     }
 
     .feedback.good {
@@ -497,6 +519,7 @@
   <main>
     <header>
       <h1>分数から小数</h1>
+      <p class="reward-rule">12問で100秒ノーミスなら500円</p>
     </header>
 
     <section class="app">
@@ -512,7 +535,7 @@
               <h2 id="promptText">小数にすると？</h2>
               <div class="challenge-meta" aria-live="polite">
                 <span id="sessionProgress">0/12</span>
-                <span id="elapsedTime">00:00</span>
+                <span id="elapsedTime">00:00.0</span>
               </div>
               <p id="hintText" class="hint">0. の後ろだけ入力してね。例: 25</p>
               <form id="answerForm">
@@ -605,7 +628,9 @@
       current: null,
       answered: false,
       challengeTarget: 12,
+      rewardLimitMs: 100000,
       sessionCorrect: 0,
+      sessionMistakes: 0,
       startedAt: null,
       finishedElapsedMs: null,
       finished: false,
@@ -928,7 +953,12 @@
       if (state.startedAt) return;
       state.startedAt = Date.now();
       renderChallenge();
-      state.timerInterval = setInterval(renderChallenge, 100);
+      state.timerInterval = setInterval(() => {
+        renderChallenge();
+        if (!state.finished && elapsedMs() > state.rewardLimitMs) {
+          finishChallenge("timeout");
+        }
+      }, 100);
     }
 
     function stopChallengeTimer() {
@@ -946,19 +976,30 @@
       });
     }
 
-    function finishChallenge() {
+    function finishChallenge(result = "success") {
       state.finished = true;
       const clearedAt = new Date();
       state.finishedElapsedMs = state.startedAt ? clearedAt.getTime() - state.startedAt : 0;
+      const rewardCleared = result === "success"
+        && state.finishedElapsedMs <= state.rewardLimitMs
+        && state.sessionMistakes === 0;
       if (state.advanceTimer) {
         clearTimeout(state.advanceTimer);
         state.advanceTimer = null;
       }
       stopChallengeTimer();
       setPracticeDisabled(true);
-      els.prompt.textContent = "おしまい！";
-      els.hint.textContent = "12問正解までの時間を測りました。";
-      setFeedback("good", `終了！12問正解。タイム ${formatElapsedMs(state.finishedElapsedMs)}。クリア ${formatClearedAt(clearedAt)}`);
+      els.prompt.textContent = rewardCleared ? "クリアー！" : "チャレンジ失敗";
+      els.hint.className = rewardCleared ? "hint reward-ticket" : "hint";
+      els.hint.textContent = rewardCleared
+        ? "500円券"
+        : result === "timeout"
+          ? "100秒をこえたので終了です。"
+          : "ミスが出たので終了です。";
+      setFeedback(
+        rewardCleared ? "good" : "bad",
+        `時刻 ${formatClearedAt(clearedAt)}\nタイム ${formatElapsedMs(state.finishedElapsedMs)}\nミス ${state.sessionMistakes}`
+      );
       setTimeout(hideCorrectReaction, 1000);
     }
 
@@ -995,6 +1036,7 @@
       startChallengeTimer();
       renderVisual(state.current);
       els.prompt.textContent = `${fractionLabel(state.current)} を小数にすると？`;
+      els.hint.className = "hint";
       els.hint.textContent = isTerminating(state.current.num, state.current.den)
         ? "0. の後ろを、最後までぴったり入れてね。"
         : "循環するところは、上点つきの数字で入れてね。";
@@ -1018,6 +1060,7 @@
         state.sessionCorrect += 1;
       } else {
         state.streak = 0;
+        state.sessionMistakes += 1;
       }
       save();
       renderChallenge();
@@ -1027,6 +1070,10 @@
     function submitAnswer(event) {
       event.preventDefault();
       if (state.finished || !state.current || state.answered) return;
+      if (state.startedAt && elapsedMs() > state.rewardLimitMs) {
+        finishChallenge("timeout");
+        return;
+      }
       const result = checkAnswer(els.input.value, state.current);
       state.answered = true;
       els.nextCard.disabled = false;
@@ -1044,7 +1091,7 @@
         }, 1000);
       } else {
         hideCorrectReaction();
-        setFeedback("bad", `惜しい。${result.reason}`);
+        finishChallenge("mistake");
       }
     }
 
