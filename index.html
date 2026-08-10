@@ -177,7 +177,7 @@
 
     .challenge-meta {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       gap: 10px;
       margin: 0 0 8px;
       color: var(--muted);
@@ -534,7 +534,6 @@
             <div class="question">
               <h2 id="promptText">小数にすると？</h2>
               <div class="challenge-meta" aria-live="polite">
-                <span id="sessionProgress">0/12</span>
                 <span id="elapsedTime">00:00.0</span>
               </div>
               <p id="hintText" class="hint">0. の後ろだけ入力してね。例: 25</p>
@@ -605,7 +604,6 @@
       form: document.getElementById("answerForm"),
       input: document.getElementById("answerInput"),
       answerDisplay: document.getElementById("answerDisplay"),
-      sessionProgress: document.getElementById("sessionProgress"),
       elapsedTime: document.getElementById("elapsedTime"),
       digitKeys: document.getElementById("digitKeys"),
       feedback: document.getElementById("feedback"),
@@ -945,7 +943,6 @@
     }
 
     function renderChallenge() {
-      els.sessionProgress.textContent = `${state.sessionCorrect}/${state.challengeTarget}`;
       els.elapsedTime.textContent = formatElapsedMs(elapsedMs());
     }
 
