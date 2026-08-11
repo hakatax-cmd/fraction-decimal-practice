@@ -1193,12 +1193,7 @@
       if (state.startedAt) return;
       state.startedAt = Date.now();
       renderChallenge();
-      state.timerInterval = setInterval(() => {
-        renderChallenge();
-        if (!state.finished && elapsedMs() > state.rewardLimitMs) {
-          finishChallenge("timeout");
-        }
-      }, 100);
+      state.timerInterval = setInterval(renderChallenge, 100);
     }
 
     function stopChallengeTimer() {
@@ -1216,13 +1211,13 @@
       });
     }
 
-    function finishChallenge(result = "success") {
+    function finishChallenge() {
       state.finished = true;
       const clearedAt = new Date();
       state.finishedElapsedMs = state.startedAt ? clearedAt.getTime() - state.startedAt : 0;
-      const rewardCleared = result === "success"
-        && state.finishedElapsedMs <= state.rewardLimitMs
-        && state.sessionMistakes === 0;
+      const timeOver = state.finishedElapsedMs > state.rewardLimitMs;
+      const hasMistake = state.sessionMistakes > 0;
+      const rewardCleared = !timeOver && !hasMistake;
       if (state.advanceTimer) {
         clearTimeout(state.advanceTimer);
         state.advanceTimer = null;
@@ -1231,11 +1226,10 @@
       setPracticeDisabled(true);
       els.prompt.textContent = rewardCleared ? "クリアー！" : "チャレンジ失敗";
       els.hint.className = rewardCleared ? "hint reward-ticket" : "hint";
-      els.hint.textContent = rewardCleared
-        ? "500円券"
-        : result === "timeout"
-          ? "100秒をこえたので終了です。"
-          : "ミスが出たので終了です。";
+      els.hint.textContent = rewardCleared ? "500円券" : [
+        hasMistake ? "ミスあり" : "",
+        timeOver ? "100秒オーバー" : ""
+      ].filter(Boolean).join("・");
       setFeedback(
         rewardCleared ? "good" : "bad",
         `時刻 ${formatClearedAt(clearedAt)}\nタイム ${formatElapsedMs(state.finishedElapsedMs)}\nミス ${state.sessionMistakes}`
@@ -1310,10 +1304,6 @@
     function submitAnswer(event) {
       event.preventDefault();
       if (state.finished || !state.current || state.answered) return;
-      if (state.startedAt && elapsedMs() > state.rewardLimitMs) {
-        finishChallenge("timeout");
-        return;
-      }
       const result = checkAnswer(els.input.value, state.current);
       state.answered = true;
       els.nextCard.disabled = false;
@@ -1331,7 +1321,7 @@
         }, 1000);
       } else {
         hideCorrectReaction();
-        finishChallenge("mistake");
+        setFeedback("bad", `惜しい。${result.reason}`);
       }
     }
 
