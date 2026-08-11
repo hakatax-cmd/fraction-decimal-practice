@@ -27,6 +27,10 @@
       box-sizing: border-box;
     }
 
+    [hidden] {
+      display: none !important;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
@@ -123,6 +127,210 @@
 
     .practice {
       padding: 16px;
+    }
+
+    .start-screen {
+      min-height: min(58vh, 440px);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 24px 12px;
+    }
+
+    .start-inner {
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+    }
+
+    .manga-cover {
+      position: relative;
+      width: min(360px, 86vw);
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at center, rgba(255, 255, 255, 0.95) 0 19%, transparent 20%),
+        repeating-radial-gradient(circle at center, rgba(32, 38, 51, 0.16) 0 2px, transparent 2px 9px),
+        linear-gradient(135deg, #fff7ed 0 48%, #e8f3ff 48% 100%);
+      box-shadow: 8px 8px 0 var(--ink);
+    }
+
+    .manga-cover::before,
+    .manga-cover::after {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border: 3px solid var(--ink);
+      transform: rotate(-2deg);
+      pointer-events: none;
+    }
+
+    .manga-cover::after {
+      inset: 26px;
+      border-style: dashed;
+      transform: rotate(2deg);
+      opacity: 0.55;
+    }
+
+    .manga-title {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      z-index: 2;
+      min-width: 72%;
+      padding: 8px 12px;
+      border: 3px solid var(--ink);
+      background: #fff;
+      color: var(--bad);
+      font-size: clamp(1.15rem, 0.95rem + 1vw, 1.75rem);
+      font-weight: 900;
+      line-height: 1.05;
+      transform: translateX(-50%) rotate(-4deg);
+      box-shadow: 5px 5px 0 #f6b44b;
+    }
+
+    .manga-badge {
+      position: absolute;
+      top: 76px;
+      right: 22px;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      width: 76px;
+      aspect-ratio: 1;
+      border: 3px solid var(--ink);
+      border-radius: 50%;
+      background: var(--bad);
+      color: #fff;
+      font-size: 1.65rem;
+      font-weight: 900;
+      transform: rotate(9deg);
+    }
+
+    .track {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 26px;
+      height: 84px;
+      border: 3px solid var(--ink);
+      background:
+        repeating-linear-gradient(0deg, transparent 0 24px, rgba(32, 38, 51, 0.7) 24px 27px),
+        linear-gradient(90deg, #f36b5d, #f6b44b);
+      transform: skewX(-10deg);
+    }
+
+    .finish-tape {
+      position: absolute;
+      right: 22px;
+      bottom: 24px;
+      z-index: 2;
+      width: 18px;
+      height: 92px;
+      border: 3px solid var(--ink);
+      background:
+        linear-gradient(45deg, #fff 0 25%, #202633 25% 50%, #fff 50% 75%, #202633 75%);
+      background-size: 18px 18px;
+    }
+
+    .runner {
+      position: absolute;
+      z-index: 3;
+      left: 88px;
+      bottom: 56px;
+      width: 64px;
+      height: 68px;
+      transform: rotate(-8deg);
+    }
+
+    .runner::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 20px;
+      width: 22px;
+      height: 22px;
+      border: 3px solid var(--ink);
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    .runner::after {
+      content: "";
+      position: absolute;
+      top: 25px;
+      left: 27px;
+      width: 12px;
+      height: 24px;
+      border: 3px solid var(--ink);
+      background: var(--primary);
+      transform: rotate(16deg);
+    }
+
+    .runner span,
+    .runner span::before,
+    .runner span::after {
+      content: "";
+      position: absolute;
+      border: 3px solid var(--ink);
+      border-radius: 999px;
+      background: var(--ink);
+      transform-origin: 0 50%;
+    }
+
+    .runner span {
+      top: 36px;
+      left: 30px;
+      width: 32px;
+      height: 0;
+      transform: rotate(-24deg);
+    }
+
+    .runner span::before {
+      top: 18px;
+      left: -3px;
+      width: 30px;
+      height: 0;
+      transform: rotate(54deg);
+    }
+
+    .runner span::after {
+      top: -8px;
+      left: 2px;
+      width: 28px;
+      height: 0;
+      transform: rotate(-54deg);
+    }
+
+    .start-kicker {
+      margin: 0;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .start-screen h2 {
+      margin: 0;
+      font-size: clamp(2rem, 1.35rem + 3vw, 4rem);
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .start-rule {
+      margin: 0;
+      color: var(--bad);
+      font-size: clamp(1.05rem, 0.9rem + 0.8vw, 1.55rem);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .start-button {
+      min-width: min(280px, 82vw);
+      min-height: 64px;
+      margin-top: 8px;
+      font-size: 1.45rem;
+      font-weight: 900;
     }
 
     .visual-zone {
@@ -525,7 +733,22 @@
     <section class="app">
       <div class="panel practice">
         <div id="practiceView">
-          <div class="visual-zone">
+          <div id="startScreen" class="start-screen">
+            <div class="start-inner">
+              <div class="manga-cover" aria-hidden="true">
+                <div class="manga-title">分数小数<br>大運動会</div>
+                <div class="manga-badge">券</div>
+                <div class="track"></div>
+                <div class="finish-tape"></div>
+                <div class="runner"><span></span></div>
+              </div>
+              <p class="start-kicker">チャレンジ</p>
+              <h2>よーい、スタート</h2>
+              <p class="start-rule">12問・100秒・ノーミス</p>
+              <button id="startButton" class="primary start-button" type="button">スタート</button>
+            </div>
+          </div>
+          <div id="challengeArea" class="visual-zone" hidden>
             <div class="picture-wrap">
               <svg id="fractionVisual" class="fraction-visual" viewBox="0 0 240 220" role="img" aria-label="分数の絵"></svg>
               <div id="fractionText" class="fraction-text">1/3</div>
@@ -605,6 +828,9 @@
       input: document.getElementById("answerInput"),
       answerDisplay: document.getElementById("answerDisplay"),
       elapsedTime: document.getElementById("elapsedTime"),
+      startScreen: document.getElementById("startScreen"),
+      challengeArea: document.getElementById("challengeArea"),
+      startButton: document.getElementById("startButton"),
       digitKeys: document.getElementById("digitKeys"),
       feedback: document.getElementById("feedback"),
       nextCard: document.getElementById("nextCard"),
@@ -806,6 +1032,23 @@
     function buildRound() {
       state.queue = spreadCardsEvenly(filteredCards(), state.current?.den ?? null);
       nextCard();
+    }
+
+    function startChallenge() {
+      state.queue = [];
+      state.current = null;
+      state.answered = false;
+      state.sessionCorrect = 0;
+      state.sessionMistakes = 0;
+      state.startedAt = null;
+      state.finishedElapsedMs = null;
+      state.finished = false;
+      els.startScreen.hidden = true;
+      els.challengeArea.hidden = false;
+      hideCorrectReaction();
+      setPracticeDisabled(false);
+      renderChallenge();
+      buildRound();
     }
 
     function takeNextCard() {
@@ -1140,6 +1383,7 @@
     }
 
     els.form.addEventListener("submit", submitAnswer);
+    els.startButton.addEventListener("click", startChallenge);
     els.nextCard.addEventListener("click", nextCard);
     document.addEventListener("click", event => {
       if (state.finished) return;
@@ -1173,7 +1417,7 @@
     renderAllTable();
     els.input.value = "";
     renderAnswerInput();
-    buildRound();
+    renderChallenge();
   </script>
 </body>
 </html>
