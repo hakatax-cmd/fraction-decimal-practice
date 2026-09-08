@@ -38,6 +38,8 @@
       color: var(--ink);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       letter-spacing: 0;
+      overflow-x: hidden;
+      overscroll-behavior-y: contain;
     }
 
     main {
@@ -54,14 +56,6 @@
       margin: 0;
       font-size: clamp(1.25rem, 1rem + 0.8vw, 1.75rem);
       font-weight: 700;
-    }
-
-    .reward-rule {
-      margin: 4px 0 0;
-      color: var(--bad);
-      font-size: clamp(0.95rem, 0.88rem + 0.35vw, 1.15rem);
-      font-weight: 800;
-      font-variant-numeric: tabular-nums;
     }
 
     button,
@@ -204,7 +198,7 @@
       border-radius: 50%;
       background: var(--bad);
       color: #fff;
-      font-size: 1.65rem;
+      font-size: 1.25rem;
       font-weight: 900;
       transform: rotate(9deg);
     }
@@ -319,7 +313,7 @@
 
     .start-rule {
       margin: 0;
-      color: var(--bad);
+      color: var(--primary);
       font-size: clamp(1.05rem, 0.9rem + 0.8vw, 1.55rem);
       font-weight: 900;
       font-variant-numeric: tabular-nums;
@@ -343,38 +337,14 @@
     .picture-wrap {
       display: grid;
       justify-items: center;
-      gap: 8px;
+      align-content: center;
+      min-height: 250px;
     }
 
     .fraction-visual {
       width: min(270px, 100%);
       height: auto;
       display: block;
-    }
-
-    .fraction-text {
-      text-align: center;
-      font-size: 2rem;
-      font-weight: 700;
-    }
-
-    .bar {
-      display: grid;
-      width: 100%;
-      grid-template-columns: repeat(var(--parts), minmax(0, 1fr));
-      gap: 3px;
-    }
-
-    .bar span {
-      height: 18px;
-      border-radius: 5px;
-      background: var(--soft-gray);
-      border: 1px solid var(--line);
-    }
-
-    .bar span.on {
-      background: var(--cool);
-      border-color: var(--cool);
     }
 
     .question h2 {
@@ -386,12 +356,28 @@
     .challenge-meta {
       display: flex;
       justify-content: flex-end;
+      align-items: center;
       gap: 10px;
-      margin: 0 0 8px;
+      position: fixed;
+      top: max(8px, env(safe-area-inset-top));
+      right: max(10px, env(safe-area-inset-right));
+      z-index: 12;
+      margin: 0;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.94);
       color: var(--muted);
       font-size: 0.95rem;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
+      box-shadow: 0 6px 18px rgba(30, 36, 48, 0.12);
+    }
+
+    .question-number {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
     }
 
     .hint {
@@ -399,19 +385,6 @@
       color: var(--muted);
       line-height: 1.55;
       font-size: 0.95rem;
-    }
-
-    .hint.reward-ticket {
-      display: inline-block;
-      margin-bottom: 14px;
-      padding: 8px 16px;
-      border: 2px solid var(--bad);
-      border-radius: 8px;
-      background: #fff7ed;
-      color: var(--bad);
-      font-size: 1.45rem;
-      font-weight: 900;
-      line-height: 1.2;
     }
 
     .answer-row {
@@ -520,17 +493,18 @@
       position: relative;
       display: inline-block;
       min-width: 0.8em;
-      padding-top: 0.28em;
-      line-height: 1;
+      padding-top: 0;
+      line-height: inherit;
+      vertical-align: baseline;
     }
 
     .repeat-digit::before {
       content: "";
       position: absolute;
-      top: 0;
+      top: -0.2em;
       left: 50%;
-      width: 0.22em;
-      height: 0.22em;
+      width: 0.18em;
+      height: 0.18em;
       border-radius: 50%;
       background: var(--primary);
       transform: translateX(-50%);
@@ -546,20 +520,68 @@
       min-height: 50px;
       border-radius: 8px;
       padding: 10px 12px;
-      background: #f2f4f7;
+      background: transparent;
       color: var(--muted);
       line-height: 1.5;
       white-space: pre-line;
+      visibility: hidden;
     }
 
     .feedback.good {
       color: var(--good);
       background: var(--soft-green);
+      visibility: visible;
     }
 
     .feedback.bad {
       color: var(--bad);
       background: var(--soft-red);
+      visibility: visible;
+    }
+
+    .leaderboard {
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 10px;
+    }
+
+    .leaderboard h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .leaderboard ol {
+      display: grid;
+      gap: 6px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .rank-row {
+      display: grid;
+      grid-template-columns: 2.5em minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 8px;
+      border-radius: 8px;
+      background: #f7f8fb;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.92rem;
+    }
+
+    .rank-row.current {
+      outline: 2px solid #f6b44b;
+      background: #fff3bf;
+    }
+
+    .rank-date {
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .feedback .repeat-digit-answer,
@@ -567,19 +589,20 @@
       position: relative;
       display: inline-block;
       min-width: 0.72em;
-      padding-top: 0.28em;
-      line-height: 1;
+      padding-top: 0;
+      line-height: inherit;
       text-align: center;
+      vertical-align: baseline;
     }
 
     .feedback .repeat-digit-answer::before,
     .answer-display .repeat-digit-answer::before {
       content: "";
       position: absolute;
-      top: 0;
+      top: -0.2em;
       left: 50%;
-      width: 0.22em;
-      height: 0.22em;
+      width: 0.18em;
+      height: 0.18em;
       border-radius: 50%;
       background: currentColor;
       transform: translateX(-50%);
@@ -727,7 +750,6 @@
   <main>
     <header>
       <h1>分数から小数</h1>
-      <p class="reward-rule">12問で100秒ノーミスなら500円</p>
     </header>
 
     <section class="app">
@@ -737,29 +759,27 @@
             <div class="start-inner">
               <div class="manga-cover" aria-hidden="true">
                 <div class="manga-title">分数小数<br>大運動会</div>
-                <div class="manga-badge">券</div>
+                <div class="manga-badge">GO</div>
                 <div class="track"></div>
                 <div class="finish-tape"></div>
                 <div class="runner"><span></span></div>
               </div>
-              <p class="start-kicker">チャレンジ</p>
+              <p class="start-kicker">タイムアタック</p>
               <h2>よーい、スタート</h2>
-              <p class="start-rule">12問・100秒・ノーミス</p>
+              <p class="start-rule">12問のタイムを測る</p>
               <button id="startButton" class="primary start-button" type="button">スタート</button>
             </div>
           </div>
           <div id="challengeArea" class="visual-zone" hidden>
             <div class="picture-wrap">
               <svg id="fractionVisual" class="fraction-visual" viewBox="0 0 240 220" role="img" aria-label="分数の絵"></svg>
-              <div id="fractionText" class="fraction-text">1/3</div>
-              <div id="fractionBar" class="bar" aria-hidden="true"></div>
             </div>
             <div class="question">
               <h2 id="promptText">小数にすると？</h2>
               <div class="challenge-meta" aria-live="polite">
+                <span id="questionNumber" class="question-number"></span>
                 <span id="elapsedTime">00:00.0</span>
               </div>
-              <p id="hintText" class="hint">0. の後ろだけ入力してね。例: 25</p>
               <form id="answerForm">
                 <div class="answer-row">
                   <div class="answer-box">
@@ -781,7 +801,8 @@
                 </div>
               </div>
 
-              <div id="feedback" class="feedback" aria-live="polite">絵の色がついた部分を、小数で表してみよう。</div>
+              <div id="feedback" class="feedback" aria-live="polite"></div>
+              <div id="leaderboard" class="leaderboard" hidden></div>
               <div class="actions">
                 <button id="nextCard" type="button">次へ</button>
               </div>
@@ -820,19 +841,18 @@
 
     const els = {
       visual: document.getElementById("fractionVisual"),
-      fractionText: document.getElementById("fractionText"),
-      bar: document.getElementById("fractionBar"),
       prompt: document.getElementById("promptText"),
-      hint: document.getElementById("hintText"),
       form: document.getElementById("answerForm"),
       input: document.getElementById("answerInput"),
       answerDisplay: document.getElementById("answerDisplay"),
+      questionNumber: document.getElementById("questionNumber"),
       elapsedTime: document.getElementById("elapsedTime"),
       startScreen: document.getElementById("startScreen"),
       challengeArea: document.getElementById("challengeArea"),
       startButton: document.getElementById("startButton"),
       digitKeys: document.getElementById("digitKeys"),
       feedback: document.getElementById("feedback"),
+      leaderboard: document.getElementById("leaderboard"),
       nextCard: document.getElementById("nextCard"),
       practiceView: document.getElementById("practiceView"),
       allView: document.getElementById("allView"),
@@ -852,9 +872,10 @@
       current: null,
       answered: false,
       challengeTarget: 12,
-      rewardLimitMs: 100000,
       sessionCorrect: 0,
+      sessionQuestion: 0,
       sessionMistakes: 0,
+      records: Array.isArray(saved.records) ? saved.records : [],
       startedAt: null,
       finishedElapsedMs: null,
       finished: false,
@@ -869,7 +890,8 @@
         stats: state.stats,
         correct: state.correct,
         tries: state.tries,
-        streak: state.streak
+        streak: state.streak,
+        records: state.records
       }));
     }
 
@@ -1039,12 +1061,15 @@
       state.current = null;
       state.answered = false;
       state.sessionCorrect = 0;
+      state.sessionQuestion = 0;
       state.sessionMistakes = 0;
       state.startedAt = null;
       state.finishedElapsedMs = null;
       state.finished = false;
       els.startScreen.hidden = true;
       els.challengeArea.hidden = false;
+      els.leaderboard.hidden = true;
+      els.leaderboard.innerHTML = "";
       hideCorrectReaction();
       setPracticeDisabled(false);
       renderChallenge();
@@ -1123,9 +1148,6 @@
 
     function renderVisual(card) {
       els.visual.innerHTML = visualMarkup(card);
-      els.fractionText.textContent = fractionLabel(card);
-      els.bar.style.setProperty("--parts", card.den);
-      els.bar.innerHTML = Array.from({ length: card.den }, (_, i) => `<span class="${i < card.num ? "on" : ""}"></span>`).join("");
     }
 
     function feedbackTextWithDots(text) {
@@ -1185,7 +1207,39 @@
       }).format(date);
     }
 
+    function topRecords(records) {
+      return [...records]
+        .sort((a, b) => a.elapsedMs - b.elapsedMs || a.mistakes - b.mistakes || new Date(b.endedAt) - new Date(a.endedAt))
+        .slice(0, 10);
+    }
+
+    function renderLeaderboard(currentRecord) {
+      const records = topRecords(state.records);
+      if (!records.length) {
+        els.leaderboard.hidden = true;
+        els.leaderboard.innerHTML = "";
+        return;
+      }
+      els.leaderboard.hidden = false;
+      els.leaderboard.innerHTML = `
+        <h3>タイム上位10位</h3>
+        <ol>
+          ${records.map((record, index) => {
+            const isCurrent = currentRecord && record.endedAt === currentRecord.endedAt;
+            return `
+              <li class="rank-row ${isCurrent ? "current" : ""}">
+                <span>${index + 1}位</span>
+                <span class="rank-date">${formatClearedAt(new Date(record.endedAt))}</span>
+                <span>${formatElapsedMs(record.elapsedMs)}</span>
+              </li>
+            `;
+          }).join("")}
+        </ol>
+      `;
+    }
+
     function renderChallenge() {
+      els.questionNumber.textContent = state.sessionQuestion ? `${state.sessionQuestion}問目` : "";
       els.elapsedTime.textContent = formatElapsedMs(elapsedMs());
     }
 
@@ -1215,25 +1269,25 @@
       state.finished = true;
       const clearedAt = new Date();
       state.finishedElapsedMs = state.startedAt ? clearedAt.getTime() - state.startedAt : 0;
-      const timeOver = state.finishedElapsedMs > state.rewardLimitMs;
-      const hasMistake = state.sessionMistakes > 0;
-      const rewardCleared = !timeOver && !hasMistake;
+      const currentRecord = {
+        endedAt: clearedAt.toISOString(),
+        elapsedMs: state.finishedElapsedMs,
+        mistakes: state.sessionMistakes
+      };
+      state.records = topRecords([...state.records, currentRecord]);
       if (state.advanceTimer) {
         clearTimeout(state.advanceTimer);
         state.advanceTimer = null;
       }
       stopChallengeTimer();
       setPracticeDisabled(true);
-      els.prompt.textContent = rewardCleared ? "クリアー！" : "チャレンジ失敗";
-      els.hint.className = rewardCleared ? "hint reward-ticket" : "hint";
-      els.hint.textContent = rewardCleared ? "500円券" : [
-        hasMistake ? "ミスあり" : "",
-        timeOver ? "100秒オーバー" : ""
-      ].filter(Boolean).join("・");
+      els.prompt.textContent = "結果";
       setFeedback(
-        rewardCleared ? "good" : "bad",
+        "good",
         `時刻 ${formatClearedAt(clearedAt)}\nタイム ${formatElapsedMs(state.finishedElapsedMs)}\nミス ${state.sessionMistakes}`
       );
+      renderLeaderboard(currentRecord);
+      save();
       setTimeout(hideCorrectReaction, 1000);
     }
 
@@ -1267,17 +1321,14 @@
       }
       state.current = takeNextCard();
       state.answered = false;
+      state.sessionQuestion += 1;
       startChallengeTimer();
       renderVisual(state.current);
       els.prompt.textContent = `${fractionLabel(state.current)} を小数にすると？`;
-      els.hint.className = "hint";
-      els.hint.textContent = isTerminating(state.current.num, state.current.den)
-        ? "0. の後ろを、最後までぴったり入れてね。"
-        : "循環するところは、上点つきの数字で入れてね。";
       els.input.value = "";
       renderAnswerInput();
       els.nextCard.disabled = true;
-      setFeedback("", "0. の後ろに続く数字を入れてみよう。");
+      setFeedback("", "");
       renderStats();
       els.input.focus();
     }
