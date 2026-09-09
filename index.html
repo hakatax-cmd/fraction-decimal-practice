@@ -123,25 +123,100 @@
       padding: 16px;
     }
 
+    body.home header {
+      display: none;
+    }
+
+    body.home main {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 18px 0;
+    }
+
+    body.home .practice {
+      width: 100%;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+    }
+
     .start-screen {
-      min-height: min(58vh, 440px);
+      position: relative;
+      min-height: min(78vh, 620px);
       display: grid;
       place-items: center;
       text-align: center;
-      padding: 24px 12px;
+      overflow: hidden;
+      padding: 32px 12px;
+    }
+
+    .start-screen::before {
+      content: "";
+      position: absolute;
+      inset: 8%;
+      border-radius: 50%;
+      background:
+        repeating-conic-gradient(from -12deg, rgba(39, 110, 241, 0.12) 0deg 8deg, transparent 8deg 18deg);
+      filter: blur(0.2px);
+      transform: rotate(-8deg);
+      pointer-events: none;
+    }
+
+    .start-screen::after {
+      content: "1/4  3/8  1/7  5/6";
+      position: absolute;
+      left: 50%;
+      bottom: 10%;
+      color: rgba(32, 38, 51, 0.12);
+      font-size: clamp(1.6rem, 0.9rem + 3vw, 3.8rem);
+      font-weight: 900;
+      white-space: nowrap;
+      transform: translateX(-50%) rotate(-5deg);
+      pointer-events: none;
     }
 
     .start-inner {
+      position: relative;
+      z-index: 1;
       display: grid;
-      gap: 16px;
+      gap: 18px;
       justify-items: center;
+    }
+
+    .home-title {
+      margin: 0;
+      font-size: clamp(3.2rem, 2.2rem + 5vw, 7rem);
+      line-height: 0.95;
+      font-weight: 1000;
+      color: var(--ink);
+      max-width: 7em;
+      text-shadow:
+        0 5px 0 #ffffff,
+        0 10px 0 rgba(246, 180, 75, 0.75);
+    }
+
+    .home-subtitle {
+      margin: 0;
+      padding: 8px 16px;
+      border: 3px solid var(--ink);
+      border-radius: 999px;
+      background: #fff3bf;
+      color: var(--ink);
+      font-size: clamp(1.15rem, 0.95rem + 1vw, 1.8rem);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      box-shadow: 5px 5px 0 var(--ink);
     }
 
     .start-button {
       min-width: min(280px, 82vw);
-      min-height: 64px;
-      margin-top: 8px;
-      font-size: 1.45rem;
+      min-height: 70px;
+      margin-top: 12px;
+      border: 3px solid var(--ink);
+      border-radius: 999px;
+      box-shadow: 6px 6px 0 var(--ink);
+      font-size: 1.55rem;
       font-weight: 900;
     }
 
@@ -561,10 +636,19 @@
         padding: 12px;
       }
 
+      .start-screen {
+        min-height: 72vh;
+        padding: 28px 8px;
+      }
+
+      .home-title {
+        font-size: clamp(2.8rem, 15vw, 4.9rem);
+      }
+
     }
   </style>
 </head>
-<body>
+<body class="home">
   <main>
     <header>
       <h1>分数から小数</h1>
@@ -575,6 +659,8 @@
         <div id="practiceView">
           <div id="startScreen" class="start-screen">
             <div class="start-inner">
+              <h2 class="home-title">分数から小数</h2>
+              <p class="home-subtitle">20問タイムトライアル</p>
               <button id="startButton" class="primary start-button" type="button">はじめる</button>
             </div>
           </div>
@@ -891,6 +977,7 @@
       state.startedAt = null;
       state.finishedElapsedMs = null;
       state.finished = false;
+      document.body.classList.remove("home");
       els.startScreen.hidden = true;
       els.challengeArea.hidden = false;
       els.leaderboard.hidden = true;
