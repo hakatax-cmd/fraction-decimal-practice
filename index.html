@@ -355,26 +355,29 @@
 
     .digit-pairs {
       display: grid;
-      grid-template-columns: repeat(10, minmax(0, 1fr));
-      gap: 5px;
-    }
-
-    .digit-stack {
-      display: grid;
-      gap: 12px;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
     }
 
     .key {
       min-width: 0;
-      min-height: 46px;
-      padding: 9px 2px;
-      font-size: 1rem;
+      min-height: 56px;
+      padding: 10px 4px;
+      border-width: 2px;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 3px 0 var(--line);
+      font-size: 1.25rem;
+      font-weight: 850;
       font-variant-numeric: tabular-nums;
     }
 
     .key.dotdigit {
-      min-height: 46px;
-      padding: 9px 2px;
+      min-height: 56px;
+      padding: 10px 4px;
+      background: #eef5ff;
+      border-color: #b8cdf8;
+      color: var(--primary);
     }
 
     .key.placeholder {
@@ -406,7 +409,7 @@
     .key-tools {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 5px;
+      gap: 10px;
     }
 
     .feedback {
@@ -1322,17 +1325,21 @@
     }
 
     function buildKeypads() {
-      els.digitKeys.innerHTML = Array.from({ length: 10 }, (_, n) => {
+      const rows = [
+        [0, 1, 2, 3, 4],
+        [0, 1, 2, 3, 4],
+        [5, 6, 7, 8, 9],
+        [5, 6, 7, 8, 9]
+      ];
+      els.digitKeys.innerHTML = rows.map((row, rowIndex) => row.map(n => {
+        if (rowIndex % 2 === 0) {
+          return `<button class="key" type="button" data-key="${n}">${n}</button>`;
+        }
         const repeat = n === 0
           ? '<button class="key dotdigit placeholder" type="button" aria-hidden="true">0</button>'
           : `<button class="key dotdigit" type="button" data-key="${n}\u0307" aria-label="${n} 上点"><span class="repeat-digit">${n}</span></button>`;
-        return `
-          <div class="digit-stack">
-            <button class="key" type="button" data-key="${n}">${n}</button>
-            ${repeat}
-          </div>
-        `;
-      }).join("");
+        return repeat;
+      }).join("")).join("");
     }
 
     els.form.addEventListener("submit", submitAnswer);
