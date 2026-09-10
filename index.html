@@ -982,18 +982,26 @@
       return allCards.filter(card => state.enabledDenoms.includes(card.den));
     }
 
-    const denominatorWeights = new Map([
-      [4, 3],
-      [6, 2],
-      [7, 9],
-      [8, 2],
-      [9, 1]
-    ]);
+    function cardAnswerKey(card) {
+      return decimalLabel(card.num, card.den).normalize("NFD");
+    }
+
+    function cardWeight(card) {
+      if (card.den === 8 && card.num % 2 === 1) return 4;
+      if (card.den === 4 && card.num !== 2) return 4;
+      if (card.den === 6 && (card.num === 1 || card.num === 5)) return 3;
+      if (card.den === 7) return 5;
+      if (card.den === 8) return 1;
+      if (card.den === 4) return 1;
+      if (card.den === 6) return 1;
+      if (card.den === 9) return 1;
+      return 1;
+    }
 
     function weightedCards() {
       const cards = [];
       filteredCards().forEach(card => {
-        const weight = denominatorWeights.get(card.den) || 1;
+        const weight = cardWeight(card);
         for (let i = 0; i < weight; i += 1) cards.push(card);
       });
       return cards;
@@ -1008,33 +1016,54 @@
       return copy;
     }
 
-    function spreadCardsEvenly(cards, previousDen = null) {
-      const groups = new Map();
-      shuffle(cards).forEach(card => {
-        if (!groups.has(card.den)) groups.set(card.den, []);
-        groups.get(card.den).push(card);
-      });
-
+    function spreadCardsEvenly(cards, previousCard = null) {
+      const remaining = shuffle(cards);
       const deck = [];
-      let lastDen = previousDen;
+      const recentAnswers = previousCard ? [cardAnswerKey(previousCard)] : [];
+      const recentIds = previousCard ? [previousCard.id] : [];
+      let lastDen = previousCard?.den ?? null;
 
-      while (deck.length < cards.length) {
-        const candidates = [...groups.entries()]
-          .filter(([den, group]) => group.length && den !== lastDen)
-          .sort((a, b) => b[1].length - a[1].length);
-        const fallback = [...groups.entries()]
-          .filter(([, group]) => group.length)
-          .sort((a, b) => b[1].length - a[1].length);
-        const [den, group] = (candidates[0] || fallback[0]);
-        deck.push(group.pop());
-        lastDen = den;
+      while (remaining.length) {
+        const denCounts = new Map();
+        const answerCounts = new Map();
+        remaining.forEach(card => {
+          denCounts.set(card.den, (denCounts.get(card.den) || 0) + 1);
+          const answer = cardAnswerKey(card);
+          answerCounts.set(answer, (answerCounts.get(answer) || 0) + 1);
+        });
+
+        let bestIndex = 0;
+        let bestScore = -Infinity;
+        remaining.forEach((card, index) => {
+          const answer = cardAnswerKey(card);
+          let score = Math.random() * 0.01;
+          score += (denCounts.get(card.den) || 0) * 2;
+          score += (answerCounts.get(answer) || 0) * 0.4;
+          if (card.den === lastDen) score -= 100;
+          if (answer === recentAnswers.at(-1)) score -= 140;
+          else if (recentAnswers.includes(answer)) score -= 35;
+          if (card.id === recentIds.at(-1)) score -= 160;
+          else if (recentIds.includes(card.id)) score -= 45;
+          if (score > bestScore) {
+            bestScore = score;
+            bestIndex = index;
+          }
+        });
+
+        const [card] = remaining.splice(bestIndex, 1);
+        deck.push(card);
+        lastDen = card.den;
+        recentAnswers.push(cardAnswerKey(card));
+        recentIds.push(card.id);
+        if (recentAnswers.length > 4) recentAnswers.shift();
+        if (recentIds.length > 5) recentIds.shift();
       }
 
       return deck;
     }
 
     function buildRound() {
-      state.queue = spreadCardsEvenly(weightedCards(), state.current?.den ?? null);
+      state.queue = spreadCardsEvenly(weightedCards(), state.current);
       nextCard();
     }
 
@@ -1063,8 +1092,15 @@
     function takeNextCard() {
       if (!state.current || !state.queue.length) return state.queue.shift();
       const sameDen = state.current.den;
-      if (state.queue[0].den !== sameDen) return state.queue.shift();
-      const swapIndex = state.queue.findIndex(card => card.den !== sameDen);
+      const sameAnswer = cardAnswerKey(state.current);
+      if (state.queue[0].den !== sameDen && cardAnswerKey(state.queue[0]) !== sameAnswer && state.queue[0].id !== state.current.id) {
+        return state.queue.shift();
+      }
+      const swapIndex = state.queue.findIndex(card =>
+        card.den !== sameDen &&
+        cardAnswerKey(card) !== sameAnswer &&
+        card.id !== state.current.id
+      );
       if (swapIndex < 0) return state.queue.shift();
       const [card] = state.queue.splice(swapIndex, 1);
       return card;
