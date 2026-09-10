@@ -1458,13 +1458,13 @@
 
     function buildKeypads() {
       const rows = [
-        [0, 1, 2, 3, 4],
-        [0, 1, 2, 3, 4],
-        [5, 6, 7, 8, 9],
-        [5, 6, 7, 8, 9]
+        { dotted: false, numbers: [0, 1, 2, 3, 4] },
+        { dotted: false, numbers: [5, 6, 7, 8, 9] },
+        { dotted: true, numbers: [0, 1, 2, 3, 4] },
+        { dotted: true, numbers: [5, 6, 7, 8, 9] }
       ];
-      els.digitKeys.innerHTML = rows.map((row, rowIndex) => row.map(n => {
-        if (rowIndex % 2 === 0) {
+      els.digitKeys.innerHTML = rows.map(row => row.numbers.map(n => {
+        if (!row.dotted) {
           return `<button class="key" type="button" data-key="${n}">${n}</button>`;
         }
         return `<button class="key dotdigit" type="button" data-key="${n}\u0307" aria-label="${n} 上点"><span class="repeat-digit">${n}</span></button>`;
