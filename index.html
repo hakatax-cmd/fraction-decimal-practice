@@ -282,8 +282,7 @@
 
     .answer-row {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 10px;
+      grid-template-columns: minmax(0, 1fr);
       margin-bottom: 22px;
     }
 
@@ -355,13 +354,13 @@
 
     .digit-pairs {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      gap: 6px;
     }
 
     .key {
       min-width: 0;
-      min-height: 56px;
+      min-height: 54px;
       padding: 10px 4px;
       border-width: 2px;
       border-radius: 12px;
@@ -373,7 +372,7 @@
     }
 
     .key.dotdigit {
-      min-height: 56px;
+      min-height: 54px;
       padding: 10px 4px;
       background: #eef5ff;
       border-color: #b8cdf8;
@@ -524,6 +523,12 @@
       opacity: 1;
     }
 
+    .reaction-content {
+      display: grid;
+      justify-items: center;
+      gap: 16px;
+    }
+
     .big-circle {
       width: min(280px, 64vw);
       aspect-ratio: 1;
@@ -532,6 +537,37 @@
       display: grid;
       place-items: center;
       background: rgba(255, 255, 255, 0.72);
+    }
+
+    .big-x {
+      display: none;
+      color: #e33a2f;
+      font-size: min(220px, 45vw);
+      font-weight: 1000;
+      line-height: 0.9;
+      text-shadow: 0 8px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .answer-flash {
+      display: none;
+      padding: 10px 18px;
+      border: 4px solid var(--bad);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--ink);
+      font-size: clamp(2.2rem, 10vw, 5rem);
+      font-weight: 1000;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+
+    .reaction.wrong .big-circle {
+      display: none;
+    }
+
+    .reaction.wrong .big-x,
+    .reaction.wrong .answer-flash {
+      display: block;
     }
 
     .actions {
@@ -686,7 +722,6 @@
                       <div id="answerDisplay" class="answer-display" aria-hidden="true"></div>
                     </div>
                   </div>
-                  <button class="primary" type="submit">答える</button>
                 </div>
               </form>
 
@@ -724,7 +759,11 @@
   </main>
 
   <div id="correctReaction" class="reaction" aria-hidden="true">
-    <div class="big-circle"></div>
+    <div class="reaction-content">
+      <div class="big-circle"></div>
+      <div class="big-x">×</div>
+      <div id="answerFlash" class="answer-flash"></div>
+    </div>
   </div>
 
   <script>
@@ -754,7 +793,8 @@
       practiceView: document.getElementById("practiceView"),
       allView: document.getElementById("allView"),
       allTable: document.getElementById("allTable"),
-      reaction: document.getElementById("correctReaction")
+      reaction: document.getElementById("correctReaction"),
+      answerFlash: document.getElementById("answerFlash")
     };
 
     const saved = JSON.parse(localStorage.getItem("fraction-decimal-practice") || "{}");
@@ -772,6 +812,7 @@
       sessionCorrect: 0,
       sessionQuestion: 0,
       sessionMistakes: 0,
+      cardMistakes: 0,
       records: Array.isArray(saved.records) ? saved.records : [],
       startedAt: null,
       finishedElapsedMs: null,
@@ -906,6 +947,33 @@
       };
     }
 
+    function answerTail(card) {
+      return decimalLabel(card.num, card.den).normalize("NFD").replace(/^0\./, "");
+    }
+
+    function answerTokens(text) {
+      const chars = Array.from(text.normalize("NFD"));
+      const tokens = [];
+      for (let i = 0; i < chars.length; i += 1) {
+        if (chars[i + 1] === "\u0307") {
+          tokens.push(chars[i] + chars[i + 1]);
+          i += 1;
+        } else {
+          tokens.push(chars[i]);
+        }
+      }
+      return tokens;
+    }
+
+    function liveAnswerState(raw, card) {
+      const input = answerTokens(raw);
+      const expected = answerTokens(answerTail(card));
+      const matches = input.every((token, index) => token === expected[index]);
+      if (!matches) return "wrong";
+      if (input.length === expected.length) return "complete";
+      return "prefix";
+    }
+
     function cardStat(card) {
       return state.stats[card.id] || { right: 0, wrong: 0 };
     }
@@ -977,6 +1045,7 @@
       state.sessionCorrect = 0;
       state.sessionQuestion = 0;
       state.sessionMistakes = 0;
+      state.cardMistakes = 0;
       state.startedAt = null;
       state.finishedElapsedMs = null;
       state.finished = false;
@@ -1086,13 +1155,23 @@
     }
 
     function showCorrectReaction() {
+      els.answerFlash.innerHTML = "";
+      els.reaction.classList.remove("show", "wrong");
+      void els.reaction.offsetWidth;
+      els.reaction.classList.add("show");
+    }
+
+    function showWrongReaction() {
+      els.answerFlash.innerHTML = feedbackTextWithDots(decimalLabel(state.current.num, state.current.den));
       els.reaction.classList.remove("show");
+      els.reaction.classList.add("wrong");
       void els.reaction.offsetWidth;
       els.reaction.classList.add("show");
     }
 
     function hideCorrectReaction() {
-      els.reaction.classList.remove("show");
+      els.reaction.classList.remove("show", "wrong");
+      els.answerFlash.innerHTML = "";
     }
 
     function renderStats() {
@@ -1173,7 +1252,6 @@
     }
 
     function setPracticeDisabled(disabled) {
-      els.form.querySelector('button[type="submit"]').disabled = disabled;
       els.nextCard.disabled = disabled;
       document.querySelectorAll("[data-key], [data-action]").forEach(button => {
         button.disabled = disabled;
@@ -1226,7 +1304,7 @@
         state.advanceTimer = null;
       }
       if (state.current && !state.answered) {
-        setFeedback("bad", "先に答えを入れて「答える」を押してね。");
+        setFeedback("bad", "まだ正解していないよ。最後まで入れてね。");
         return;
       }
       hideCorrectReaction();
@@ -1236,6 +1314,7 @@
       }
       state.current = takeNextCard();
       state.answered = false;
+      state.cardMistakes = 0;
       state.sessionQuestion += 1;
       startChallengeTimer();
       renderVisual(state.current);
@@ -1267,49 +1346,101 @@
       renderAllTable();
     }
 
-    function submitAnswer(event) {
-      event.preventDefault();
-      if (state.finished || !state.current || state.answered) return;
-      const result = checkAnswer(els.input.value, state.current);
+    function recordMistake(card) {
+      const stat = cardStat(card);
+      stat.wrong += 1;
+      state.stats[card.id] = stat;
+      state.tries += 1;
+      state.streak = 0;
+      state.sessionMistakes += 1;
+      state.cardMistakes += 1;
+      save();
+      renderChallenge();
+      renderAllTable();
+    }
+
+    function completeCurrentAnswer() {
       state.answered = true;
       els.nextCard.disabled = false;
-      record(state.current, result.ok);
-      if (result.ok) {
-        setFeedback("good", `正解。${fractionLabel(state.current)} = ${decimalLabel(state.current.num, state.current.den)}`);
-        showCorrectReaction();
-        if (state.sessionCorrect >= state.challengeTarget) {
-          finishChallenge();
-          return;
-        }
+      record(state.current, true);
+      setFeedback("good", `正解。${fractionLabel(state.current)} = ${decimalLabel(state.current.num, state.current.den)}`);
+      showCorrectReaction();
+      if (state.sessionCorrect >= state.challengeTarget) {
+        finishChallenge();
+        return;
+      }
+      state.advanceTimer = setTimeout(() => {
+        state.advanceTimer = null;
+        nextCard();
+      }, 600);
+    }
+
+    function missCurrentInput(previousValue, previousCaret) {
+      els.input.value = previousValue;
+      renderAnswerInput();
+      els.input.focus();
+      els.input.setSelectionRange(previousCaret, previousCaret);
+      recordMistake(state.current);
+      if (state.cardMistakes >= 3) {
+        state.answered = true;
+        els.nextCard.disabled = false;
+        setFeedback("bad", `3回ミス。答えは ${decimalLabel(state.current.num, state.current.den)}`);
+        showWrongReaction();
         state.advanceTimer = setTimeout(() => {
           state.advanceTimer = null;
           nextCard();
-        }, 1000);
-      } else {
-        hideCorrectReaction();
-        setFeedback("bad", `惜しい。${result.reason}`);
+        }, 1200);
+        return;
       }
+      hideCorrectReaction();
+      setFeedback("bad", "本当にそれでいい？ 1文字戻したよ。");
+    }
+
+    function evaluateLiveAnswer(previousValue, previousCaret) {
+      if (state.finished || !state.current || state.answered) return;
+      if (!els.input.value) {
+        setFeedback("", "");
+        return;
+      }
+      const status = liveAnswerState(els.input.value, state.current);
+      if (status === "wrong") {
+        missCurrentInput(previousValue, previousCaret);
+        return;
+      }
+      if (status === "complete") {
+        completeCurrentAnswer();
+        return;
+      }
+      setFeedback("", "");
+    }
+
+    function submitAnswer(event) {
+      event.preventDefault();
     }
 
     function appendInput(text) {
-      if (state.finished) return;
+      if (state.finished || state.answered) return;
       if (text === ".") return;
       const start = els.input.selectionStart ?? els.input.value.length;
       const end = els.input.selectionEnd ?? els.input.value.length;
+      const previousValue = els.input.value;
+      const previousCaret = start;
       els.input.value = els.input.value.slice(0, start) + text + els.input.value.slice(end);
       const caret = start + text.length;
       renderAnswerInput();
       els.input.focus();
       els.input.setSelectionRange(caret, caret);
+      evaluateLiveAnswer(previousValue, previousCaret);
     }
 
     function backspaceInput() {
-      if (state.finished) return;
+      if (state.finished || state.answered) return;
       const start = els.input.selectionStart ?? els.input.value.length;
       const end = els.input.selectionEnd ?? els.input.value.length;
       if (start !== end) {
         els.input.value = els.input.value.slice(0, start) + els.input.value.slice(end);
         renderAnswerInput();
+        setFeedback("", "");
         els.input.setSelectionRange(start, start);
         return;
       }
@@ -1320,25 +1451,21 @@
       const caret = Math.max(0, start - deleteCount);
       els.input.value = next;
       renderAnswerInput();
+      setFeedback("", "");
       els.input.focus();
       els.input.setSelectionRange(caret, caret);
     }
 
     function buildKeypads() {
       const rows = [
-        [0, 1, 2, 3, 4],
-        [0, 1, 2, 3, 4],
-        [5, 6, 7, 8, 9],
-        [5, 6, 7, 8, 9]
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
       ];
       els.digitKeys.innerHTML = rows.map((row, rowIndex) => row.map(n => {
         if (rowIndex % 2 === 0) {
           return `<button class="key" type="button" data-key="${n}">${n}</button>`;
         }
-        const repeat = n === 0
-          ? '<button class="key dotdigit placeholder" type="button" aria-hidden="true">0</button>'
-          : `<button class="key dotdigit" type="button" data-key="${n}\u0307" aria-label="${n} 上点"><span class="repeat-digit">${n}</span></button>`;
-        return repeat;
+        return `<button class="key dotdigit" type="button" data-key="${n}\u0307" aria-label="${n} 上点"><span class="repeat-digit">${n}</span></button>`;
       }).join("")).join("");
     }
 
@@ -1352,8 +1479,10 @@
       if (key) appendInput(key.dataset.key);
       if (action?.dataset.action === "back") backspaceInput();
       if (action?.dataset.action === "clear") {
+        if (state.finished || state.answered) return;
         els.input.value = "";
         renderAnswerInput();
+        setFeedback("", "");
         els.input.focus();
       }
     });
