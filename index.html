@@ -699,7 +699,7 @@
           <div id="startScreen" class="start-screen">
             <div class="start-inner">
               <h2 class="home-title">分数から小数</h2>
-              <p class="home-subtitle">20問タイムトライアル</p>
+              <p class="home-subtitle">39問フルチャレンジ</p>
               <button id="startButton" class="primary start-button" type="button">はじめる</button>
             </div>
           </div>
@@ -797,7 +797,8 @@
       answerFlash: document.getElementById("answerFlash")
     };
 
-    const saved = JSON.parse(localStorage.getItem("fraction-decimal-practice") || "{}");
+    const storageKey = "fraction-decimal-practice-full-deck-v1";
+    const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
     const state = {
       enabledDenoms: [3, 4, 5, 6, 7, 8, 9],
       stats: saved.stats || {},
@@ -808,7 +809,7 @@
       queue: [],
       current: null,
       answered: false,
-      challengeTarget: 20,
+      challengeTarget: 39,
       sessionCorrect: 0,
       sessionQuestion: 0,
       sessionMistakes: 0,
@@ -824,7 +825,7 @@
     };
 
     function save() {
-      localStorage.setItem("fraction-decimal-practice", JSON.stringify({
+      localStorage.setItem(storageKey, JSON.stringify({
         stats: state.stats,
         correct: state.correct,
         tries: state.tries,
@@ -986,23 +987,17 @@
       return decimalLabel(card.num, card.den).normalize("NFD");
     }
 
-    function cardWeight(card) {
-      if (card.den === 8 && card.num % 2 === 1) return 4;
-      if (card.den === 4 && card.num !== 2) return 4;
-      if (card.den === 6 && (card.num === 1 || card.num === 5)) return 3;
-      if (card.den === 7) return 5;
-      if (card.den === 8) return 1;
-      if (card.den === 4) return 1;
-      if (card.den === 6) return 1;
-      if (card.den === 9) return 1;
+    function repeatCount(card) {
+      if (card.den === 8 && [1, 3, 5, 7].includes(card.num)) return 3;
+      if (card.id === "1/7") return 2;
       return 1;
     }
 
-    function weightedCards() {
+    function challengeCards() {
       const cards = [];
       filteredCards().forEach(card => {
-        const weight = cardWeight(card);
-        for (let i = 0; i < weight; i += 1) cards.push(card);
+        const count = repeatCount(card);
+        for (let i = 0; i < count; i += 1) cards.push(card);
       });
       return cards;
     }
@@ -1016,11 +1011,18 @@
       return copy;
     }
 
+    function recentDistance(deck, card, distance) {
+      for (let offset = 1; offset <= distance; offset += 1) {
+        const other = deck[deck.length - offset];
+        if (other?.id === card.id) return offset;
+      }
+      return Infinity;
+    }
+
     function spreadCardsEvenly(cards, previousCard = null) {
       const remaining = shuffle(cards);
       const deck = [];
       const recentAnswers = previousCard ? [cardAnswerKey(previousCard)] : [];
-      const recentIds = previousCard ? [previousCard.id] : [];
       let lastDen = previousCard?.den ?? null;
 
       while (remaining.length) {
@@ -1042,8 +1044,8 @@
           if (card.den === lastDen) score -= 100;
           if (answer === recentAnswers.at(-1)) score -= 140;
           else if (recentAnswers.includes(answer)) score -= 35;
-          if (card.id === recentIds.at(-1)) score -= 160;
-          else if (recentIds.includes(card.id)) score -= 45;
+          const sameCardDistance = recentDistance(deck, card, 10);
+          if (sameCardDistance < Infinity) score -= 500 - sameCardDistance * 20;
           if (score > bestScore) {
             bestScore = score;
             bestIndex = index;
@@ -1054,17 +1056,15 @@
         deck.push(card);
         lastDen = card.den;
         recentAnswers.push(cardAnswerKey(card));
-        recentIds.push(card.id);
         if (recentAnswers.length > 4) recentAnswers.shift();
-        if (recentIds.length > 5) recentIds.shift();
       }
 
       return deck;
     }
 
-    function buildRound() {
-      state.queue = spreadCardsEvenly(weightedCards(), state.current);
-      nextCard();
+    function buildChallengeDeck() {
+      state.queue = spreadCardsEvenly(challengeCards(), null);
+      state.challengeTarget = state.queue.length;
     }
 
     function startChallenge() {
@@ -1085,8 +1085,9 @@
       els.leaderboard.innerHTML = "";
       hideCorrectReaction();
       setPracticeDisabled(false);
+      buildChallengeDeck();
       renderChallenge();
-      buildRound();
+      nextCard();
     }
 
     function takeNextCard() {
@@ -1345,7 +1346,7 @@
       }
       hideCorrectReaction();
       if (!state.queue.length) {
-        buildRound();
+        finishChallenge();
         return;
       }
       state.current = takeNextCard();
@@ -1401,10 +1402,6 @@
       record(state.current, true);
       setFeedback("good", `正解。${fractionLabel(state.current)} = ${decimalLabel(state.current.num, state.current.den)}`);
       showCorrectReaction();
-      if (state.sessionCorrect >= state.challengeTarget) {
-        finishChallenge();
-        return;
-      }
       state.advanceTimer = setTimeout(() => {
         state.advanceTimer = null;
         nextCard();
