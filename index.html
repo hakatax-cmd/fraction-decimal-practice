@@ -231,7 +231,7 @@
       display: grid;
       justify-items: center;
       align-content: center;
-      min-height: 250px;
+      min-height: 230px;
     }
 
     .fraction-visual {
@@ -240,8 +240,16 @@
       display: block;
     }
 
+    .question-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
     .question h2 {
-      margin: 0 0 8px;
+      margin: 0;
       font-size: clamp(1.25rem, 1.04rem + 0.75vw, 1.8rem);
       font-weight: 700;
     }
@@ -251,20 +259,12 @@
       justify-content: flex-end;
       align-items: center;
       gap: 10px;
-      position: fixed;
-      top: max(8px, env(safe-area-inset-top));
-      right: max(10px, env(safe-area-inset-right));
-      z-index: 12;
       margin: 0;
-      padding: 6px 10px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.94);
+      white-space: nowrap;
       color: var(--muted);
       font-size: 0.95rem;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
-      box-shadow: 0 6px 18px rgba(30, 36, 48, 0.12);
     }
 
     .question-number {
@@ -668,11 +668,154 @@
     @media (max-width: 520px) {
       main {
         width: min(100% - 18px, 1120px);
-        padding-top: 14px;
+        padding: 6px 0 10px;
       }
 
       .practice {
-        padding: 12px;
+        padding: 8px;
+      }
+
+      body:not(.home) {
+        background: var(--panel);
+      }
+
+      body:not(.home):not(.finished) {
+        height: 100dvh;
+        overflow: hidden;
+      }
+
+      body:not(.home) header {
+        display: none;
+      }
+
+      body:not(.home):not(.finished) main {
+        width: 100%;
+        height: 100dvh;
+        padding: max(4px, env(safe-area-inset-top)) 8px max(6px, env(safe-area-inset-bottom));
+      }
+
+      body:not(.home):not(.finished) .app,
+      body:not(.home):not(.finished) .practice,
+      body:not(.home):not(.finished) #practiceView {
+        height: 100%;
+        min-height: 0;
+      }
+
+      body:not(.home) .panel {
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      body:not(.home) .practice {
+        padding: 4px 2px 8px;
+      }
+
+      body:not(.home):not(.finished) #challengeArea {
+        height: 100%;
+        min-height: 0;
+        grid-template-rows: minmax(138px, 28dvh) minmax(0, 1fr);
+        align-items: stretch;
+        gap: 4px;
+        overflow: hidden;
+      }
+
+      .picture-wrap {
+        min-height: 0;
+      }
+
+      .fraction-visual {
+        width: min(184px, 51vw, 28dvh);
+      }
+
+      .question {
+        min-height: 0;
+      }
+
+      body:not(.home):not(.finished) .question {
+        display: grid;
+        grid-template-rows: auto auto auto minmax(30px, auto) auto;
+        align-content: start;
+        gap: 4px;
+        overflow: hidden;
+      }
+
+      .question-topline {
+        gap: 6px;
+        margin-bottom: 2px;
+      }
+
+      .question h2 {
+        font-size: clamp(1.08rem, 5vw, 1.38rem);
+        text-align: center;
+      }
+
+      .challenge-meta {
+        gap: 6px;
+        font-size: 0.82rem;
+      }
+
+      .question-number {
+        font-size: 0.7rem;
+      }
+
+      .answer-row {
+        margin-bottom: 4px;
+      }
+
+      .answer-prefix {
+        min-width: 58px;
+        padding: 0 10px;
+        font-size: 1.55rem;
+      }
+
+      .answer-row input,
+      .answer-display {
+        padding: 7px 10px;
+        font-size: 1.65rem;
+      }
+
+      .keypad {
+        gap: 6px;
+        margin: 2px 0 4px;
+        min-height: 0;
+      }
+
+      .digit-pairs {
+        gap: 6px;
+      }
+
+      .key {
+        min-height: clamp(38px, 6.1dvh, 46px);
+        padding: 6px 2px;
+        border-radius: 10px;
+        font-size: 1.08rem;
+        box-shadow: 0 2px 0 var(--line);
+      }
+
+      .key.dotdigit {
+        min-height: clamp(38px, 6.1dvh, 46px);
+        padding: 6px 2px;
+      }
+
+      .key-tools {
+        gap: 6px;
+      }
+
+      .feedback {
+        min-height: 30px;
+        padding: 5px 8px;
+        font-size: 0.92rem;
+        line-height: 1.35;
+      }
+
+      .actions {
+        margin-top: 2px;
+      }
+
+      .actions button {
+        min-height: 34px;
+        padding: 6px 10px;
       }
 
       .start-screen {
@@ -708,10 +851,12 @@
               <svg id="fractionVisual" class="fraction-visual" viewBox="0 0 240 220" role="img" aria-label="分数の絵"></svg>
             </div>
             <div class="question">
-              <h2 id="promptText">小数にすると？</h2>
-              <div class="challenge-meta" aria-live="polite">
-                <span id="questionNumber" class="question-number"></span>
-                <span id="elapsedTime">00:00.0</span>
+              <div class="question-topline">
+                <h2 id="promptText">小数にすると？</h2>
+                <div class="challenge-meta" aria-live="polite">
+                  <span id="questionNumber" class="question-number"></span>
+                  <span id="elapsedTime">00:00.0</span>
+                </div>
               </div>
               <form id="answerForm">
                 <div class="answer-row">
@@ -735,9 +880,6 @@
 
               <div id="feedback" class="feedback" aria-live="polite"></div>
               <div id="leaderboard" class="leaderboard" hidden></div>
-              <div class="actions">
-                <button id="nextCard" type="button">次へ</button>
-              </div>
             </div>
           </div>
         </div>
@@ -789,7 +931,6 @@
       digitKeys: document.getElementById("digitKeys"),
       feedback: document.getElementById("feedback"),
       leaderboard: document.getElementById("leaderboard"),
-      nextCard: document.getElementById("nextCard"),
       practiceView: document.getElementById("practiceView"),
       allView: document.getElementById("allView"),
       allTable: document.getElementById("allTable"),
@@ -798,7 +939,18 @@
     };
 
     const storageKey = "fraction-decimal-practice-full-deck-v1";
-    const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+
+    // Some mobile browsers restrict localStorage when an HTML file is opened
+    // directly from the device. Practice must still start in that situation.
+    function loadSavedData() {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey) || "{}");
+      } catch {
+        return {};
+      }
+    }
+
+    const saved = loadSavedData();
     const state = {
       enabledDenoms: [3, 4, 5, 6, 7, 8, 9],
       stats: saved.stats || {},
@@ -825,13 +977,17 @@
     };
 
     function save() {
-      localStorage.setItem(storageKey, JSON.stringify({
-        stats: state.stats,
-        correct: state.correct,
-        tries: state.tries,
-        streak: state.streak,
-        records: state.records
-      }));
+      try {
+        localStorage.setItem(storageKey, JSON.stringify({
+          stats: state.stats,
+          correct: state.correct,
+          tries: state.tries,
+          streak: state.streak,
+          records: state.records
+        }));
+      } catch {
+        // Keep playing even if this browser cannot save records locally.
+      }
     }
 
     function gcd(a, b) {
@@ -883,7 +1039,7 @@
       }
       const info = recurringInfo(num, den);
       if (info.repeat.length === 1) return `0.${info.prefix}${dottedDigit(info.repeat)}`;
-      return `0.${info.prefix}${dottedDigit(info.repeat[0])}${info.repeat.slice(1, -1)}${dottedDigit(info.repeat.at(-1))}`;
+      return `0.${info.prefix}${dottedDigit(info.repeat[0])}${info.repeat.slice(1, -1)}${dottedDigit(info.repeat[info.repeat.length - 1])}`;
     }
 
     function plainDecimalLabel(num, den) {
@@ -1042,7 +1198,7 @@
           score += (denCounts.get(card.den) || 0) * 2;
           score += (answerCounts.get(answer) || 0) * 0.4;
           if (card.den === lastDen) score -= 100;
-          if (answer === recentAnswers.at(-1)) score -= 140;
+          if (answer === recentAnswers[recentAnswers.length - 1]) score -= 140;
           else if (recentAnswers.includes(answer)) score -= 35;
           const sameCardDistance = recentDistance(deck, card, 10);
           if (sameCardDistance < Infinity) score -= 500 - sameCardDistance * 20;
@@ -1078,7 +1234,7 @@
       state.startedAt = null;
       state.finishedElapsedMs = null;
       state.finished = false;
-      document.body.classList.remove("home");
+      document.body.classList.remove("home", "finished");
       els.startScreen.hidden = true;
       els.challengeArea.hidden = false;
       els.leaderboard.hidden = true;
@@ -1121,6 +1277,22 @@
       return `M ${cx} ${cy} L ${a.x} ${a.y} A ${r} ${r} 0 ${large} 1 ${b.x} ${b.y} Z`;
     }
 
+    function renderClockScale() {
+      const cx = 120;
+      const cy = 110;
+      const parts = [];
+      for (let value = 1; value <= 10; value += 1) {
+        // 10 is at the top; 1–9 continue clockwise like a clock face.
+        const angle = value === 10 ? 0 : value * 36;
+        const inner = polar(cx, cy, 92, angle);
+        const outer = polar(cx, cy, 99, angle);
+        const label = polar(cx, cy, 102, angle);
+        parts.push(`<line x1="${inner.x}" y1="${inner.y}" x2="${outer.x}" y2="${outer.y}" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" opacity="0.7"></line>`);
+        parts.push(`<text x="${label.x}" y="${label.y}" text-anchor="middle" dominant-baseline="middle" fill="var(--muted)" font-size="11" font-weight="800" opacity="0.82">${value}</text>`);
+      }
+      return parts.join("");
+    }
+
     function renderCircle(card, size = "large") {
       const stroke = size === "large" ? 3 : 5;
       const parts = [];
@@ -1129,6 +1301,7 @@
         parts.push(`<path d="${slicePath(i * 360 / card.den, (i + 1) * 360 / card.den)}" fill="${active ? "var(--warm)" : "var(--soft-gray)"}" stroke="var(--panel)" stroke-width="${stroke}"></path>`);
       }
       parts.push('<circle cx="120" cy="110" r="88" fill="none" stroke="var(--line)" stroke-width="2"></circle>');
+      parts.push(renderClockScale());
       return parts.join("");
     }
 
@@ -1289,7 +1462,6 @@
     }
 
     function setPracticeDisabled(disabled) {
-      els.nextCard.disabled = disabled;
       document.querySelectorAll("[data-key], [data-action]").forEach(button => {
         button.disabled = disabled;
       });
@@ -1297,6 +1469,7 @@
 
     function finishChallenge() {
       state.finished = true;
+      document.body.classList.add("finished");
       const clearedAt = new Date();
       state.finishedElapsedMs = state.startedAt ? clearedAt.getTime() - state.startedAt : 0;
       const currentRecord = {
@@ -1358,7 +1531,6 @@
       els.prompt.textContent = `${fractionLabel(state.current)} を小数にすると？`;
       els.input.value = "";
       renderAnswerInput();
-      els.nextCard.disabled = true;
       setFeedback("", "");
       renderStats();
       els.input.focus();
@@ -1398,7 +1570,6 @@
 
     function completeCurrentAnswer() {
       state.answered = true;
-      els.nextCard.disabled = false;
       record(state.current, true);
       setFeedback("good", `正解。${fractionLabel(state.current)} = ${decimalLabel(state.current.num, state.current.den)}`);
       showCorrectReaction();
@@ -1416,7 +1587,6 @@
       recordMistake(state.current);
       if (state.cardMistakes >= 3) {
         state.answered = true;
-        els.nextCard.disabled = false;
         setFeedback("bad", `3回ミス。答えは ${decimalLabel(state.current.num, state.current.den)}`);
         showWrongReaction();
         state.advanceTimer = setTimeout(() => {
@@ -1479,7 +1649,7 @@
       }
       const chars = Array.from(els.input.value);
       const before = Array.from(els.input.value.slice(0, start));
-      const deleteCount = before.length && before.at(-1) === "\u0307" ? 2 : 1;
+      const deleteCount = before.length && before[before.length - 1] === "\u0307" ? 2 : 1;
       const next = chars.slice(0, Math.max(0, before.length - deleteCount)).join("") + chars.slice(before.length).join("");
       const caret = Math.max(0, start - deleteCount);
       els.input.value = next;
@@ -1506,7 +1676,6 @@
 
     els.form.addEventListener("submit", submitAnswer);
     els.startButton.addEventListener("click", startChallenge);
-    els.nextCard.addEventListener("click", nextCard);
     document.addEventListener("click", event => {
       if (state.finished) return;
       const key = event.target.closest("[data-key]");
