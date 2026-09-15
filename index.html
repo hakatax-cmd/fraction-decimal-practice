@@ -714,7 +714,7 @@
       body:not(.home):not(.finished) #challengeArea {
         height: 100%;
         min-height: 0;
-        grid-template-rows: minmax(148px, 29dvh) minmax(0, 1fr);
+        grid-template-rows: minmax(168px, 32dvh) minmax(0, 1fr);
         align-items: stretch;
         gap: 4px;
         overflow: hidden;
@@ -725,7 +725,7 @@
       }
 
       .fraction-visual {
-        width: min(206px, 57vw, 29dvh);
+        width: min(230px, 63vw, 32dvh);
       }
 
       .question {
@@ -735,7 +735,7 @@
       body:not(.home):not(.finished) .question {
         display: grid;
         grid-template-rows: auto auto auto minmax(30px, auto) auto;
-        align-content: start;
+        align-content: space-between;
         gap: 4px;
         overflow: hidden;
       }
@@ -752,11 +752,11 @@
 
       .challenge-meta {
         gap: 6px;
-        font-size: 1rem;
+        font-size: 1.16rem;
       }
 
       .question-number {
-        font-size: 0.86rem;
+        font-size: 0.98rem;
       }
 
       .answer-row {
@@ -786,7 +786,7 @@
       }
 
       .key {
-        min-height: clamp(42px, 6.8dvh, 54px);
+        min-height: clamp(46px, 8dvh, 65px);
         padding: 6px 2px;
         border-radius: 10px;
         font-size: 1.16rem;
@@ -794,7 +794,7 @@
       }
 
       .key.dotdigit {
-        min-height: clamp(42px, 6.8dvh, 54px);
+        min-height: clamp(46px, 8dvh, 65px);
         padding: 6px 2px;
       }
 
