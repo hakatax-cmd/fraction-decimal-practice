@@ -1112,8 +1112,6 @@
       challengeTarget: 39,
       sessionCorrect: 0,
       sessionQuestion: 0,
-      sessionMistakes: 0,
-      cardMistakes: 0,
       records: Array.isArray(saved.records) ? saved.records : [],
       lastPlay: saved.lastPlay || null,
       startedAt: null,
@@ -1379,8 +1377,6 @@
       state.answered = false;
       state.sessionCorrect = 0;
       state.sessionQuestion = 0;
-      state.sessionMistakes = 0;
-      state.cardMistakes = 0;
       state.startedAt = null;
       state.finishedElapsedMs = null;
       state.finished = false;
@@ -1524,14 +1520,6 @@
       els.reaction.classList.add("show");
     }
 
-    function showWrongReaction() {
-      els.answerFlash.innerHTML = feedbackTextWithDots(decimalLabel(state.current.num, state.current.den));
-      els.reaction.classList.remove("show");
-      els.reaction.classList.add("wrong");
-      void els.reaction.offsetWidth;
-      els.reaction.classList.add("show");
-    }
-
     function hideCorrectReaction() {
       els.reaction.classList.remove("show", "wrong");
       els.answerFlash.innerHTML = "";
@@ -1566,7 +1554,7 @@
 
     function topRecords(records) {
       return [...records]
-        .sort((a, b) => a.elapsedMs - b.elapsedMs || a.mistakes - b.mistakes || new Date(b.endedAt) - new Date(a.endedAt))
+        .sort((a, b) => a.elapsedMs - b.elapsedMs || new Date(b.endedAt) - new Date(a.endedAt))
         .slice(0, 10);
     }
 
@@ -1681,8 +1669,7 @@
       state.finishedElapsedMs = state.startedAt ? clearedAt.getTime() - state.startedAt : 0;
       const currentRecord = {
         endedAt: clearedAt.toISOString(),
-        elapsedMs: state.finishedElapsedMs,
-        mistakes: state.sessionMistakes
+        elapsedMs: state.finishedElapsedMs
       };
       state.lastPlay = currentRecord;
       state.records = topRecords([...state.records, currentRecord]);
@@ -1695,7 +1682,7 @@
       els.prompt.textContent = "結果";
       setFeedback(
         "good",
-        `時刻 ${formatClearedAt(clearedAt)}\nタイム ${formatElapsedMs(state.finishedElapsedMs)}\nミス ${state.sessionMistakes}`
+        `時刻 ${formatClearedAt(clearedAt)}\nタイム ${formatElapsedMs(state.finishedElapsedMs)}`
       );
       renderLeaderboard(currentRecord);
       save();
@@ -1732,7 +1719,6 @@
       }
       state.current = takeNextCard();
       state.answered = false;
-      state.cardMistakes = 0;
       state.sessionQuestion += 1;
       startChallengeTimer();
       renderVisual(state.current);
@@ -1756,21 +1742,7 @@
         state.sessionCorrect += 1;
       } else {
         state.streak = 0;
-        state.sessionMistakes += 1;
       }
-      save();
-      renderChallenge();
-      renderAllTable();
-    }
-
-    function recordMistake(card) {
-      const stat = cardStat(card);
-      stat.wrong += 1;
-      state.stats[card.id] = stat;
-      state.tries += 1;
-      state.streak = 0;
-      state.sessionMistakes += 1;
-      state.cardMistakes += 1;
       save();
       renderChallenge();
       renderAllTable();
@@ -1787,24 +1759,13 @@
       }, 600);
     }
 
-    function missCurrentInput(previousValue, previousCaret) {
-      els.input.value = previousValue;
+    function missCurrentInput() {
+      els.input.value = "";
       renderAnswerInput();
       els.input.focus();
-      els.input.setSelectionRange(previousCaret, previousCaret);
-      recordMistake(state.current);
-      if (state.cardMistakes >= 3) {
-        state.answered = true;
-        setFeedback("bad", `3回ミス。答えは ${decimalLabel(state.current.num, state.current.den)}`);
-        showWrongReaction();
-        state.advanceTimer = setTimeout(() => {
-          state.advanceTimer = null;
-          nextCard();
-        }, 1200);
-        return;
-      }
+      els.input.setSelectionRange(0, 0);
       hideCorrectReaction();
-      setFeedback("bad", "本当にそれでいい？ 1文字戻したよ。");
+      setFeedback("bad", "本当にそれでいい？ もう一度やってみよう。");
     }
 
     function evaluateLiveAnswer(previousValue, previousCaret) {
@@ -1815,7 +1776,7 @@
       }
       const status = liveAnswerState(els.input.value, state.current);
       if (status === "wrong") {
-        missCurrentInput(previousValue, previousCaret);
+        missCurrentInput();
         return;
       }
       if (status === "complete") {
