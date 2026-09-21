@@ -272,14 +272,16 @@
 
     .record-tiles {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
-      gap: 10px;
+      grid-template-columns: 1fr;
+      gap: 7px;
     }
 
     .record-tile {
       display: grid;
-      gap: 4px;
-      padding: 11px;
+      grid-template-columns: minmax(54px, 0.7fr) minmax(88px, 1.2fr) minmax(52px, 0.75fr) minmax(72px, 0.95fr);
+      align-items: center;
+      gap: 8px;
+      padding: 10px 11px;
       border: 1px solid var(--line);
       border-radius: 12px;
       background: var(--soft-gray);
@@ -306,11 +308,14 @@
     .record-time {
       font-size: 0.9rem;
       font-weight: 750;
+      white-space: nowrap;
     }
 
     .record-result {
       font-size: 1.3rem;
       font-weight: 950;
+      text-align: right;
+      white-space: nowrap;
     }
 
     .record-empty {
