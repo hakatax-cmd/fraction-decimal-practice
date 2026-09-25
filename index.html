@@ -302,6 +302,7 @@
       color: var(--muted);
       font-size: 0.78rem;
       font-weight: 800;
+      white-space: nowrap;
     }
 
     .record-date,
@@ -1604,8 +1605,9 @@
 
       els.homeRecords.innerHTML = entries.map(({ record, rank }) => {
         const classes = ["record-tile"];
-        if (isToday(record)) classes.push("today");
-        if (sameRecord(record, state.lastPlay)) classes.push("last");
+        const playedToday = isToday(record);
+        if (playedToday) classes.push("today");
+        if (sameRecord(record, state.lastPlay) && !playedToday) classes.push("last");
         return `
           <article class="${classes.join(" ")}">
             <span class="record-rank">${rank}位${rank === 11 ? "（最後のプレイ）" : ""}</span>
